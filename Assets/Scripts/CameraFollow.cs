@@ -8,11 +8,19 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] private bool smoothFollow = true;
     
     private Transform target;
-   // private CloneManager cloneManager;
+    private CloneManager cloneManager;
+    private PlayerController player;
     
     private void Start()
     {
-     //   cloneManager = FindFirstObjectByType<CloneManager>();
+        cloneManager = FindFirstObjectByType<CloneManager>();
+        player = FindFirstObjectByType<PlayerController>();
+        
+        // Initially follow the player
+        if (player != null)
+        {
+            target = player.transform;
+        }
     }
     
     private void LateUpdate()
@@ -23,14 +31,23 @@ public class CameraFollow : MonoBehaviour
     
     private void UpdateTarget()
     {
-      /*  if (cloneManager != null)
+        // Always follow the player (not clones) since player is the active character
+        if (player != null)
+        {
+            target = player.transform;
+        }
+        
+        // Alternative: Follow the most recently created active clone
+        /*
+        if (cloneManager != null)
         {
             Clone activeClone = cloneManager.GetActiveClone();
             if (activeClone != null)
             {
                 target = activeClone.transform;
             }
-        } */
+        }
+        */
     }
     
     private void FollowTarget()

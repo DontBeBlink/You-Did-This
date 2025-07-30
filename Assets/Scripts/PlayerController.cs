@@ -18,6 +18,7 @@ public class PlayerController : MonoBehaviour {
     private CameraController cameraController;
     private CheckpointSystem checkpoint;
     private InteractSystem interact;
+    private ActionRecorder actionRecorder;
     private Vector2 axis;
 
     /// <summary>
@@ -27,6 +28,7 @@ public class PlayerController : MonoBehaviour {
         character = GetComponent<CharacterController2D>();
         checkpoint = GetComponent<CheckpointSystem>();
         interact = GetComponent<InteractSystem>();
+        actionRecorder = GetComponent<ActionRecorder>();
         cameraController = GameObject.FindFirstObjectByType<CameraController>();
         if (!cameraController) {
             Debug.LogError("The scene is missing a camera controller! The player script needs it to work properly!");
@@ -47,6 +49,18 @@ public class PlayerController : MonoBehaviour {
     void FixedUpdate() {
         character.Walk(axis.x);
         character.ClimbLadder(axis.y);
+        
+        // Update action recorder if available
+        if (actionRecorder != null) {
+            actionRecorder.CurrentMovement = axis;
+        }
+    }
+    
+    void Update() {
+        // Reset frame inputs for action recorder
+        if (actionRecorder != null) {
+            actionRecorder.ResetFrameInputs();
+        }
     }
 
     private void Move(Vector2 _axis) {
@@ -59,6 +73,11 @@ public class PlayerController : MonoBehaviour {
         } else {
             character.Jump();
         }
+        
+        // Record jump action
+        if (actionRecorder != null) {
+            actionRecorder.IsJumping = true;
+        }
     }
 
     private void EndJump(InputAction.CallbackContext context) {
@@ -67,17 +86,33 @@ public class PlayerController : MonoBehaviour {
 
     private void Dash(InputAction.CallbackContext context) {
         character.Dash(axis);
+        
+        // Record dash action
+        if (actionRecorder != null) {
+            actionRecorder.IsDashing = true;
+            actionRecorder.DashDirection = axis;
+        }
     }
 
     private void Interact(InputAction.CallbackContext context) {
         if (interact) {
             interact.Interact();
+            
+            // Record interact action
+            if (actionRecorder != null) {
+                actionRecorder.IsInteracting = true;
+            }
         }
     }
 
     private void Attack(InputAction.CallbackContext context) {
         if (interact && interact.PickedUpObject) {
             interact.Throw();
+            
+            // Record attack action
+            if (actionRecorder != null) {
+                actionRecorder.IsAttacking = true;
+            }
         }
     }
 
