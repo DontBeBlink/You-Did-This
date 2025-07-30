@@ -28,7 +28,7 @@ public class GameUI : MonoBehaviour
         // Set initial instructions
         if (instructionsText != null)
         {
-            instructionsText.text = "WASD: Move\nSpace: Jump\nAutomatic loop every 15s";
+            instructionsText.text = "WASD: Move\nSpace: Jump\nAutomatic loop every 15s\nL: Manual loop";
         }
     }
     

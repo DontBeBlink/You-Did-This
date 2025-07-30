@@ -7,6 +7,8 @@ public class CloneManager : MonoBehaviour
     [SerializeField] private float loopDuration = 15f; // Time until new loop starts
     [SerializeField] private int maxClones = 10; // Maximum number of clones
     [SerializeField] private bool autoStartFirstLoop = true;
+    [SerializeField] private bool enableManualLooping = true; // Allow manual loop triggering
+    [SerializeField] private KeyCode manualLoopKey = KeyCode.L;
     
     [Header("Clone Prefab")]
     [SerializeField] private GameObject clonePrefab; // If null, will clone the player object
@@ -53,6 +55,18 @@ public class CloneManager : MonoBehaviour
     
     private void Update()
     {
+        // Handle manual loop triggering
+        if (enableManualLooping && Input.GetKeyDown(manualLoopKey))
+        {
+            if (allClones.Count < maxClones)
+            {
+                CreateClone();
+                StartNewLoop();
+                Debug.Log("Manual loop triggered!");
+            }
+        }
+        
+        // Automatic loop timing
         if (isLoopActive && Time.time - loopStartTime >= loopDuration)
         {
             if (allClones.Count < maxClones)
@@ -89,12 +103,24 @@ public class CloneManager : MonoBehaviour
     
     public void CreateClone()
     {
-        if (actionRecorder == null || actionRecorder.ActionCount == 0)
+        if (actionRecorder == null)
+        {
+            Debug.LogWarning("No ActionRecorder found - cannot create clone");
+            return;
+        }
+        
+        if (actionRecorder.ActionCount == 0)
         {
             Debug.LogWarning("No actions recorded to create clone from");
             return;
         }
         
+        if (allClones.Count >= maxClones)
+        {
+            Debug.LogWarning($"Maximum clone limit ({maxClones}) reached - cannot create more clones");
+            return;
+        }
+
         GameObject cloneObject;
         
         if (clonePrefab != null)
@@ -211,6 +237,12 @@ public class CloneManager : MonoBehaviour
         Debug.Log("All clones destroyed");
     }
     
+    // Clean up any null references in the clone list
+    private void CleanupCloneList()
+    {
+        allClones.RemoveAll(clone => clone == null);
+    }
+    
     public void SetLoopDuration(float newDuration)
     {
         loopDuration = Mathf.Max(1f, newDuration);
@@ -218,10 +250,23 @@ public class CloneManager : MonoBehaviour
     }
     
     // Properties
-    public List<Clone> GetAllClones() => new List<Clone>(allClones);
+    public List<Clone> GetAllClones() {
+        CleanupCloneList();
+        return new List<Clone>(allClones);
+    }
     public Clone GetActiveClone() => allClones.Count > 0 ? allClones[allClones.Count - 1] : null;
-    public int TotalClones => allClones.Count;
-    public int StuckClones => allClones.FindAll(c => c != null && c.IsStuck).Count;
+    public int TotalClones {
+        get {
+            CleanupCloneList();
+            return allClones.Count;
+        }
+    }
+    public int StuckClones {
+        get {
+            CleanupCloneList();
+            return allClones.FindAll(c => c != null && c.IsStuck).Count;
+        }
+    }
     public int ActiveCloneIndex => nextCloneIndex - 1;
     public float CurrentLoopTime => isLoopActive ? Time.time - loopStartTime : 0f;
     public float TimeUntilNextLoop => isLoopActive ? loopDuration - CurrentLoopTime : 0f;

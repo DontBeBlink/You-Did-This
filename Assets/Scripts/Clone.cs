@@ -54,9 +54,18 @@ public class Clone : MonoBehaviour
     
     public void InitializeClone(List<PlayerAction> actions, int index)
     {
-        actionsToReplay = new List<PlayerAction>(actions);
+        if (actions == null || actions.Count == 0)
+        {
+            Debug.LogWarning($"Clone {index} initialized with no actions to replay");
+            actionsToReplay = new List<PlayerAction>();
+        }
+        else
+        {
+            actionsToReplay = new List<PlayerAction>(actions);
+        }
+        
         cloneIndex = index;
-        replayDuration = actions.Count > 0 ? actions[actions.Count - 1].timestamp : 0f;
+        replayDuration = actionsToReplay.Count > 0 ? actionsToReplay[actionsToReplay.Count - 1].timestamp : 0f;
         
         // Disable player input components
         PlayerController playerController = GetComponent<PlayerController>();
@@ -72,7 +81,7 @@ public class Clone : MonoBehaviour
         }
         
         SetupCloneVisuals();
-        Debug.Log($"Clone {index} initialized with {actionsToReplay.Count} actions");
+        Debug.Log($"Clone {index} initialized with {actionsToReplay.Count} actions, duration: {replayDuration:F1}s");
     }
     
     public void StartReplay()

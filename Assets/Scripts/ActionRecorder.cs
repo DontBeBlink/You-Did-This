@@ -56,6 +56,12 @@ public class ActionRecorder : MonoBehaviour
     
     public void StartRecording()
     {
+        if (isRecording)
+        {
+            Debug.LogWarning("Already recording! Stopping previous recording.");
+            StopRecording();
+        }
+        
         isRecording = true;
         recordingStartTime = Time.time;
         lastRecordTime = Time.time;
