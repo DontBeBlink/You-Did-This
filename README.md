@@ -1,0 +1,1 @@
+This is a game project for the GMTK Game Jam 2025
