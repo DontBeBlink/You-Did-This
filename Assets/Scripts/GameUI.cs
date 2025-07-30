@@ -11,11 +11,11 @@ public class GameUI : MonoBehaviour
     [SerializeField] private Button retractButton;
     [SerializeField] private Button createCloneButton;
     
-    private CloneManager cloneManager;
+   // private CloneManager cloneManager;
     
     private void Start()
     {
-        cloneManager = FindObjectOfType<CloneManager>();
+       /* cloneManager = FindFirstObjectByType<CloneManager>();
         
         // Set up button events
         if (retractButton != null)
@@ -23,7 +23,7 @@ public class GameUI : MonoBehaviour
         
         if (createCloneButton != null)
             createCloneButton.onClick.AddListener(() => cloneManager?.CreateClone());
-        
+        */
         // Set initial instructions
         if (instructionsText != null)
         {
@@ -38,6 +38,7 @@ public class GameUI : MonoBehaviour
     
     private void UpdateUI()
     {
+        /*
         if (cloneManager == null) return;
         
         // Update clone count
@@ -76,5 +77,6 @@ public class GameUI : MonoBehaviour
         {
             createCloneButton.interactable = cloneManager.TotalClones < 10; // Max clones
         }
+        */
     }
 }

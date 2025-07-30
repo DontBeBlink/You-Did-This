@@ -12,13 +12,14 @@ public class Goal : MonoBehaviour
     [SerializeField] private Color completeColor = Color.green;
     [SerializeField] private GameObject completionEffect;
     
-    private SpriteRenderer spriteRenderer;
+    private SpriteRenderer spriteRenderer; 
+    /*
     private CloneManager cloneManager;
     
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
-        cloneManager = FindObjectOfType<CloneManager>();
+        cloneManager = FindFirstObjectByType<CloneManager>();
         
         UpdateVisuals();
     }
@@ -52,7 +53,7 @@ public class Goal : MonoBehaviour
         // Make the clone stuck
         if (cloneManager != null)
         {
-            cloneManager.SetCloneStuck(clone);
+            cloneManager.SetCloneStuck(clone, this);
         }
         
         // Visual feedback
@@ -91,6 +92,7 @@ public class Goal : MonoBehaviour
     public bool IsCompleted => isCompleted;
     public int RequiredCloneIndex => requiredCloneIndex;
     
+    */
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = isCompleted ? Color.green : Color.yellow;

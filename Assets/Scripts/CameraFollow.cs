@@ -8,11 +8,11 @@ public class CameraFollow : MonoBehaviour
     [SerializeField] private bool smoothFollow = true;
     
     private Transform target;
-    private CloneManager cloneManager;
+   // private CloneManager cloneManager;
     
     private void Start()
     {
-        cloneManager = FindObjectOfType<CloneManager>();
+     //   cloneManager = FindFirstObjectByType<CloneManager>();
     }
     
     private void LateUpdate()
@@ -23,14 +23,14 @@ public class CameraFollow : MonoBehaviour
     
     private void UpdateTarget()
     {
-        if (cloneManager != null)
+      /*  if (cloneManager != null)
         {
             Clone activeClone = cloneManager.GetActiveClone();
             if (activeClone != null)
             {
                 target = activeClone.transform;
             }
-        }
+        } */
     }
     
     private void FollowTarget()

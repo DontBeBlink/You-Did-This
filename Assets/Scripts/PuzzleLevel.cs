@@ -11,13 +11,13 @@ public class PuzzleLevel : MonoBehaviour
     [Header("Completion")]
     [SerializeField] private GameObject completionEffect;
     [SerializeField] private bool levelCompleted = false;
-    
-    private CloneManager cloneManager;
+
+    // private CloneManager cloneManager;
     private int completedGoals = 0;
     
     private void Start()
     {
-        cloneManager = FindObjectOfType<CloneManager>();
+        //cloneManager = FindFirstObjectByType<CloneManager>();
         
         // Subscribe to goal completion events
         foreach (Goal goal in requiredGoals)
@@ -38,7 +38,7 @@ public class PuzzleLevel : MonoBehaviour
         completedGoals = 0;
         foreach (Goal goal in requiredGoals)
         {
-            if (goal.IsCompleted)
+            //if (goal.IsCompleted)
                 completedGoals++;
         }
         
