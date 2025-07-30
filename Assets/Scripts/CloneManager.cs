@@ -59,6 +59,12 @@ public class CloneManager : MonoBehaviour
             newClone.SetState(Clone.CloneState.Active);
             
             Debug.Log($"Created new clone. Total clones: {clones.Count}");
+            
+            // Play clone creation sound
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayCloneCreateSound();
+            }
         }
         
         UpdateDebugInfo();
@@ -95,6 +101,12 @@ public class CloneManager : MonoBehaviour
             Clone previousClone = clones[activeCloneIndex];
             previousClone.SetState(Clone.CloneState.Active);
             Debug.Log($"Retracted to previous clone. Total clones: {clones.Count}");
+            
+            // Play retract sound
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayCloneRetractSound();
+            }
         }
         
         UpdateDebugInfo();

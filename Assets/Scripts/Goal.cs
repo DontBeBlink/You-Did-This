@@ -65,6 +65,12 @@ public class Goal : MonoBehaviour
         
         Debug.Log($"Goal completed by clone!");
         
+        // Play goal reached sound
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayGoalReachedSound();
+        }
+        
         // Trigger any additional completion logic here
         OnGoalCompleted();
     }

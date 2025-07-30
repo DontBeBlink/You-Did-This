@@ -143,6 +143,12 @@ public class PlayerController : MonoBehaviour
     {
         Jump();
         
+        // Play jump sound
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayJumpSound();
+        }
+        
         // Record jump if recording
         if (actionRecorder && actionRecorder.IsRecording)
         {

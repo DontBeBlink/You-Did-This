@@ -42,6 +42,9 @@ public class ActionPlayer : MonoBehaviour
     {
         if (!isPlaying || actionsToPlay.Count == 0 || !playerController) return;
         
+        // Don't update if game is paused
+        if (GameManager.Instance != null && GameManager.Instance.IsPaused) return;
+        
         float currentTime = Time.time - playbackStartTime;
         
         // Process all actions that should have happened by now
