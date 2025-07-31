@@ -13,7 +13,6 @@ public class Goal : MonoBehaviour
     [SerializeField] private GameObject completionEffect;
     
     private SpriteRenderer spriteRenderer; 
-    /*
     private CloneManager cloneManager;
     
     private void Awake()
@@ -91,8 +90,6 @@ public class Goal : MonoBehaviour
     
     public bool IsCompleted => isCompleted;
     public int RequiredCloneIndex => requiredCloneIndex;
-    
-    */
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = isCompleted ? Color.green : Color.yellow;

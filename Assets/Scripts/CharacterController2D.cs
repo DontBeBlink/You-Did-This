@@ -45,6 +45,11 @@ public class CharacterController2D : ObjectController2D {
     public bool Invulnerable => invulnerableTime > 0;
     public bool Immobile { get; set; }
     public bool Dashing { get; set; }
+    public bool JustJumped { get; set; }
+    public bool JustDashed { get; set; }
+    public Vector2 LastDashDirection { get; set; }
+    public bool JustInteracted { get; set; }
+    public bool JustAttacked { get; set; }
 
     /// <summary>
     /// Start is called on the frame when a script is enabled just before
@@ -70,7 +75,45 @@ public class CharacterController2D : ObjectController2D {
         Move((TotalSpeed) * Time.fixedDeltaTime);
         PostMove();
         SetAnimations();
+
+        // After all movement/physics is applied, record the state
+        var recorder = GetComponent<ActionRecorder>();
+        if (recorder != null && recorder.IsRecording)
+        {
+            recorder.RecordFromCharacter(this);
+           // recorder.CurrentMovement = speed.x; // Update the action recorder with the current movement
+        }
+
+        // Reset one-frame action flags after recording
+        JustJumped = false;
+        JustDashed = false;
+        JustInteracted = false;
+        JustAttacked = false;
+        LastDashDirection = Vector2.zero;
     }
+
+    /// <summary>
+    /// Sets the full physics state of the character (for clone replay initialization)
+    /// </summary>
+    public void SetPhysicsState(Vector3 position, Vector2 newSpeed, Vector2 newExternalForce = default)
+    {
+        transform.position = position;
+        speed = newSpeed;
+        externalForce = newExternalForce;
+        // Optionally reset other relevant state
+        Dashing = false;
+        airStaggerTime = 0;
+        stunTime = 0;
+        invulnerableTime = 0;
+        OnLadder = false;
+        Immobile = false;
+        // Ensure cData is initialized before using it
+        if (cData == null)
+            cData = GetComponent<CharacterData>();
+        // Reset jumps/dashes to max (optional, or let replay handle)
+        ResetJumpsAndDashes();
+    }
+
 
     /*-------------------------*/
     /*--------MOVEMENT---------*/
@@ -79,32 +122,42 @@ public class CharacterController2D : ObjectController2D {
     /// <summary>
     /// Tries to move according to current speed and checking for collisions
     /// </summary>
-    public override Vector2 Move(Vector2 deltaMove) {
+    public override Vector2 Move(Vector2 deltaMove)
+    {
         int layer = gameObject.layer;
         gameObject.layer = Physics2D.IgnoreRaycastLayer;
         PreMove(ref deltaMove);
         float xDir = Mathf.Sign(deltaMove.x);
-        if (deltaMove.x != 0) {
+        if (deltaMove.x != 0)
+        {
             // Slope checks and processing
-            if (deltaMove.y <= 0 && cData.canUseSlopes) {
-                if (collisions.onSlope) {
-                    if (collisions.groundDirection == xDir) {
-                        if ((!Dashing && airStaggerTime <= 0) || cData.dashDownSlopes) {
+            if (deltaMove.y <= 0 && cData.canUseSlopes)
+            {
+                if (collisions.onSlope)
+                {
+                    if (collisions.groundDirection == xDir)
+                    {
+                        if ((!Dashing && airStaggerTime <= 0) || cData.dashDownSlopes)
+                        {
                             DescendSlope(ref deltaMove);
                         }
-                    } else {
+                    }
+                    else
+                    {
                         ClimbSlope(ref deltaMove);
                     }
                 }
             }
             HorizontalCollisions(ref deltaMove);
         }
-        if (collisions.hHit && cData.canWallSlide && TotalSpeed.y <= 0) {
+        if (collisions.hHit && cData.canWallSlide && TotalSpeed.y <= 0)
+        {
             externalForce.y = 0;
             speed.y = -cData.wallSlideSpeed;
         }
         if (collisions.onSlope && collisions.groundAngle >= minWallAngle &&
-            collisions.groundDirection != xDir && speed.y < 0) {
+            collisions.groundDirection != xDir && speed.y < 0)
+        {
             float sin = Mathf.Sin(collisions.groundAngle * Mathf.Deg2Rad);
             float cos = Mathf.Cos(collisions.groundAngle * Mathf.Deg2Rad);
             deltaMove.x = cos * cData.wallSlideSpeed * Time.fixedDeltaTime * collisions.groundDirection;
@@ -115,21 +168,27 @@ public class CharacterController2D : ObjectController2D {
             collisions.hHit = Physics2D.Raycast(origin, Vector2.left * collisions.groundDirection,
                 1f, collisionMask);
         }
-        if (collisions.onGround && deltaMove.x != 0 && speed.y <= 0) {
+        if (collisions.onGround && deltaMove.x != 0 && speed.y <= 0)
+        {
             HandleSlopeChange(ref deltaMove);
         }
-        if (deltaMove.y > 0 || (deltaMove.y < 0 && (!collisions.onSlope || deltaMove.x == 0))) {
+        if (deltaMove.y > 0 || (deltaMove.y < 0 && (!collisions.onSlope || deltaMove.x == 0)))
+        {
             VerticalCollisions(ref deltaMove);
         }
         Debug.DrawRay(transform.position, deltaMove * 3f, Color.green);
         transform.Translate(deltaMove);
         // Checks for ground and ceiling, resets jumps if grounded
-        if (collisions.vHit) {
-            if ((collisions.below && TotalSpeed.y < 0) || (collisions.above && TotalSpeed.y > 0)) {
-                if (collisions.below) {
+        if (collisions.vHit)
+        {
+            if ((collisions.below && TotalSpeed.y < 0) || (collisions.above && TotalSpeed.y > 0))
+            {
+                if (collisions.below)
+                {
                     ResetJumpsAndDashes();
                 }
-                if (!collisions.onSlope || collisions.groundAngle < minWallAngle) {
+                if (!collisions.onSlope || collisions.groundAngle < minWallAngle)
+                {
                     speed.y = 0;
                     externalForce.y = 0;
                 }
@@ -394,6 +453,7 @@ public class CharacterController2D : ObjectController2D {
                 if (soundManager) {
                     soundManager.PlayJumpSound();
                 }
+                JustJumped = true;
             }
         }
     }
@@ -454,6 +514,8 @@ public class CharacterController2D : ObjectController2D {
             dashCooldown = cData.maxDashCooldown;
             airStaggerTime = cData.dashStagger;
             Invoke("StopDash", cData.dashDistance / cData.dashSpeed);
+            JustDashed = true;
+            LastDashDirection = direction;
         }
     }
 
@@ -497,6 +559,7 @@ public class CharacterController2D : ObjectController2D {
     /// Gives the character its maximum extra jumps and air dashes
     /// </summary>
     public void ResetJumpsAndDashes() {
+        if (cData == null) return;
         extraJumps = cData.maxExtraJumps;
         airDashes = cData.maxAirDashes;
     }

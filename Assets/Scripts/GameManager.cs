@@ -13,7 +13,7 @@ public class GameManager : MonoBehaviour
     
     private bool isPaused = false;
     private bool showDebug = false;
-    //private CloneManager cloneManager;
+    private CloneManager cloneManager;
     private PuzzleLevel currentLevel;
     
     private static GameManager instance;
@@ -35,7 +35,7 @@ public class GameManager : MonoBehaviour
     
     private void Start()
     {
-       // cloneManager = FindFirstObjectByType<CloneManager>();
+        cloneManager = FindFirstObjectByType<CloneManager>();
         currentLevel = FindFirstObjectByType<PuzzleLevel>();
         
         if (pauseOnStart)
@@ -102,12 +102,14 @@ public class GameManager : MonoBehaviour
         
         GUILayout.BeginArea(new Rect(10, 10, 300, 200));
         GUILayout.Label("=== DEBUG INFO ===");
-        /*
+        
         if (cloneManager != null)
         {
             GUILayout.Label($"Total Clones: {cloneManager.TotalClones}");
             GUILayout.Label($"Stuck Clones: {cloneManager.StuckClones}");
             GUILayout.Label($"Active Clone Index: {cloneManager.ActiveCloneIndex}");
+            GUILayout.Label($"Loop Time: {cloneManager.CurrentLoopTime:F1}s / {cloneManager.LoopDuration:F1}s");
+            GUILayout.Label($"Next Loop In: {cloneManager.TimeUntilNextLoop:F1}s");
         }
         
         if (currentLevel != null)
@@ -116,7 +118,6 @@ public class GameManager : MonoBehaviour
             GUILayout.Label($"Goals: {currentLevel.CompletedGoals}/{currentLevel.TotalGoals}");
             GUILayout.Label($"Completed: {currentLevel.IsCompleted}");
         }
-        */
         
         GUILayout.Label($"Time Scale: {Time.timeScale}");
         GUILayout.Label($"FPS: {(1f / Time.unscaledDeltaTime):F1}");

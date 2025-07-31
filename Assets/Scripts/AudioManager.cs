@@ -62,7 +62,7 @@ public class AudioManager : MonoBehaviour
         PlaySound(levelCompleteSound);
     }
     
-    private void PlaySound(AudioClip clip)
+    public void PlaySound(AudioClip clip)
     {
         if (clip != null && audioSource != null)
         {

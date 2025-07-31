@@ -82,6 +82,11 @@ public class InteractSystem : MonoBehaviour {
         if (closestObject) {
             closestObject.Interact(this);
             closestObject = null;
+            
+            // Set flag for action recording
+            if (character != null) {
+                character.JustInteracted = true;
+            }
         }
     }
 
@@ -91,6 +96,11 @@ public class InteractSystem : MonoBehaviour {
     public void Throw() {
         if (PickedUpObject) {
             PickedUpObject.Throw(throwForce);
+            
+            // Set flag for action recording
+            if (character != null) {
+                character.JustAttacked = true;
+            }
         }
     }
 

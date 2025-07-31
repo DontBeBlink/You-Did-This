@@ -38,7 +38,7 @@ public class PuzzleLevel : MonoBehaviour
         completedGoals = 0;
         foreach (Goal goal in requiredGoals)
         {
-            //if (goal.IsCompleted)
+            if (goal.IsCompleted)
                 completedGoals++;
         }
         
