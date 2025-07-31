@@ -26,6 +26,8 @@ public class CharacterController2D : ObjectController2D {
     private CharacterSoundManager soundManager;
     [SerializeField]
     private SpriteRenderer visual;
+    [SerializeField]
+    private GameObject Effects; // Effects prefab for jump and other actions
 
     // Physics properties
     private float ignoreLaddersTime = 0;
@@ -436,7 +438,22 @@ public class CharacterController2D : ObjectController2D {
                 speed.y = Mathf.Sqrt(-2 * pConfig.gravity * height);
                 externalForce.y = 0;
                 animator.SetTrigger(ANIMATION_JUMP);
-                if (cData.jumpCancelStagger) {
+                
+                GameObject effects = Instantiate(Effects, transform); // instantiate jump effects as a child of this GameObject. 
+                if (effects) { // get animator of child "Effects", play jump particle effect
+                    Animator effectsAnimator = effects.GetComponent<Animator>();
+                    if (effectsAnimator)
+                    {
+                        effectsAnimator.SetTrigger("Jump");
+                        // then detach "Effects" from the player so it doesn't move with it
+                        effects.transform.parent = null;
+                        // and destroy it after 2 seconds
+                        Destroy(effects.gameObject, 2f);
+                    }
+                }
+
+                if (cData.jumpCancelStagger)
+                {
                     airStaggerTime = 0;
                 }
                 // wall jump

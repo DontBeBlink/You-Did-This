@@ -145,7 +145,7 @@ public class CloneManager : MonoBehaviour
                 Destroy(allClones[0].gameObject);
             }
             allClones.RemoveAt(0);
-            Debug.Log($"Clone limit reached. Oldest clone destroyed to make room for new one.");
+            //Debug.Log($"Clone limit reached. Oldest clone destroyed to make room for new one.");
         }
 
         GameObject cloneObject;

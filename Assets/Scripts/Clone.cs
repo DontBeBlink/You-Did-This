@@ -144,7 +144,7 @@ public class Clone : MonoBehaviour
                 replayStartTime = Time.time;
                 currentActionIndex = 0;
                 wasJumpHeld = false; // Reset jump held state for loop
-                Debug.Log($"Clone {cloneIndex} looping replay");
+                //Debug.Log($"Clone {cloneIndex} looping replay");
                 this.transform.position = CloneManager.instance.transform.position; // Reset position if needed
                 lastActionReplayed = null;
             }

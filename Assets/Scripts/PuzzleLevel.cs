@@ -11,6 +11,7 @@ public class PuzzleLevel : MonoBehaviour
     [Header("Completion")]
     [SerializeField] private GameObject completionEffect;
     [SerializeField] private bool levelCompleted = false;
+    [SerializeField] private string nextScene = "NextLevel"; // Name of the next scene to load after completion
 
     // private CloneManager cloneManager;
     private int completedGoals = 0;
@@ -62,10 +63,13 @@ public class PuzzleLevel : MonoBehaviour
         // You could trigger level progression here
         OnLevelCompleted();
     }
-    
+
     protected virtual void OnLevelCompleted()
     {
         // Override in derived classes for specific level completion behavior
+        
+        // for now just go to next level
+        UnityEngine.SceneManagement.SceneManager.LoadScene(nextScene);
     }
     
     public bool IsCompleted => levelCompleted;

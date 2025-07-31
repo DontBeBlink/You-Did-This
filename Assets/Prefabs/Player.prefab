@@ -111,7 +111,7 @@ GameObject:
   - component: {fileID: 1069890986033099354}
   m_Layer: 11
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -241,7 +241,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Volume: 0.4
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -347,6 +347,7 @@ MonoBehaviour:
   speed: {x: 0, y: 0}
   externalForce: {x: 0, y: 0}
   visual: {fileID: 5317202781068630853}
+  Effects: {fileID: 2425109146915483557, guid: faaf98d17634de040a969fc9b7385d21, type: 3}
   extraJumps: 0
   airDashes: 0
 --- !u!114 &7737047858355556696

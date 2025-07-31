@@ -14,16 +14,21 @@ public class LogicGateTrigger : TriggerObject {
     public TriggerObject inputA;
     [Tooltip("The second input trigger")]
     public TriggerObject inputB;
+    [Tooltip("The second input trigger")]
+    public TriggerObject inputC;
 
     /// <summary>
     /// Returns the result of running the inputs through the logic gate
     /// </summary>
     /// <value>The result of the logic gate</value>
-    public override bool Active {
-        get {
+    public override bool Active
+    {
+        get
+        {
             if (!inputA || (!inputB && type != LogicGateType.Not))
                 return false;
-            switch (type) {
+            switch (type)
+            {
                 case LogicGateType.Not:
                     return !inputA.Active;
                 case LogicGateType.And:
@@ -36,6 +41,12 @@ public class LogicGateTrigger : TriggerObject {
                     return !(inputA.Active && inputB.Active);
                 case LogicGateType.Nor:
                     return !(inputA.Active || inputB.Active);
+                case LogicGateType.And3:
+                    return inputA.Active && inputB.Active && inputC.Active;
+                case LogicGateType.Or3:
+                    return inputA.Active || inputB.Active || inputC.Active;
+                case LogicGateType.Xor3:
+                    return (inputA.Active && !inputB.Active && !inputC.Active) || (!inputA.Active && inputB.Active && !inputC.Active) || (!inputA.Active && !inputB.Active && inputC.Active);
                 default:
                     return false;
             }
@@ -53,12 +64,15 @@ public class LogicGateTrigger : TriggerObject {
     /// <summary>
     /// Types of logic gates
     /// </summary>
-    public enum LogicGateType {
+    public enum LogicGateType { // add new types for 3+ inputs
         Not,
         And,
         Or,
         Xor,
         Nand,
-        Nor
+        Nor,
+        And3,
+        Or3,
+        Xor3
     }
 }

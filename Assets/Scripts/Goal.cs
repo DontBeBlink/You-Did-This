@@ -6,6 +6,7 @@ public class Goal : MonoBehaviour
     [SerializeField] private bool requiresSpecificClone = false;
     [SerializeField] private int requiredCloneIndex = -1;
     [SerializeField] private bool isCompleted = false;
+    [SerializeField] private bool isPlayerGoal = false; // If true, this goal is for the player to reach
     
     [Header("Visual Feedback")]
     [SerializeField] private Color incompleteColor = Color.yellow;
@@ -15,14 +16,16 @@ public class Goal : MonoBehaviour
     private SpriteRenderer spriteRenderer; 
     private CloneManager cloneManager;
     
+    
+    
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         cloneManager = FindFirstObjectByType<CloneManager>();
-        
+
         UpdateVisuals();
     }
-    
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         Clone clone = other.GetComponent<Clone>();
@@ -33,15 +36,20 @@ public class Goal : MonoBehaviour
             {
                 var allClones = cloneManager.GetAllClones();
                 int cloneIndex = allClones.IndexOf(clone);
-                
+
                 if (cloneIndex != requiredCloneIndex)
                 {
                     Debug.Log($"Wrong clone reached goal. Required: {requiredCloneIndex}, Got: {cloneIndex}");
                     return;
                 }
             }
-            
+
             CompleteGoal(clone);
+        } 
+        else if (isPlayerGoal && other.CompareTag("Player"))
+        {
+            // If this goal is for the player, complete it directly
+            CompleteGoal(null);
         }
     }
     
