@@ -23,6 +23,7 @@ public class Clone : MonoBehaviour
     // Clone identification
     private int cloneIndex;
     private Goal stuckAtGoal;
+    private bool wasJumpHeld = false; // Track previous jump held state for EndJump
     
     private void Awake()
     {
@@ -95,6 +96,7 @@ public class Clone : MonoBehaviour
         isReplaying = true;
         replayStartTime = Time.time;
         currentActionIndex = 0;
+        wasJumpHeld = false; // Reset jump held state
         Debug.Log($"Clone {cloneIndex} started replaying actions");
     }
     
@@ -115,6 +117,7 @@ public class Clone : MonoBehaviour
             {
                 replayStartTime = Time.time;
                 currentActionIndex = 0;
+                wasJumpHeld = false; // Reset jump held state for loop
                 Debug.Log($"Clone {cloneIndex} looping replay");
                 this.transform.position = CloneManager.instance.transform.position; // Reset position if needed
             }
@@ -136,27 +139,50 @@ public class Clone : MonoBehaviour
     {
         if (isStuck) return;
         
+        // Debug output for action execution
+        bool actionExecuted = false;
+        string actionDebug = $"Clone {cloneIndex} executing: ";
+        
         // Execute movement
         if (character != null)
         {
-            character.Walk(action.movement.x);
-            character.ClimbLadder(action.movement.y);
+            if (action.movement.x != 0 || action.movement.y != 0)
+            {
+                character.Walk(action.movement.x);
+                character.ClimbLadder(action.movement.y);
+                actionDebug += $"move({action.movement.x:F2},{action.movement.y:F2}) ";
+                actionExecuted = true;
+            }
             
             if (action.isJumping)
             {
                 if (action.movement.y < 0)
                 {
                     character.JumpDown();
+                    actionDebug += "jumpDown ";
                 }
                 else
                 {
                     character.Jump();
+                    actionDebug += "jump ";
                 }
+                actionExecuted = true;
             }
+            
+            // Handle jump hold duration - EndJump when transitioning from held to not held
+            if (wasJumpHeld && !action.jumpHeld)
+            {
+                character.EndJump();
+                actionDebug += "endJump ";
+                actionExecuted = true;
+            }
+            wasJumpHeld = action.jumpHeld;
             
             if (action.isDashing)
             {
                 character.Dash(action.dashDirection);
+                actionDebug += $"dash({action.dashDirection.x:F2},{action.dashDirection.y:F2}) ";
+                actionExecuted = true;
             }
         }
         
@@ -166,12 +192,23 @@ public class Clone : MonoBehaviour
             if (action.isInteracting)
             {
                 interact.Interact();
+                actionDebug += "interact ";
+                actionExecuted = true;
             }
             
             if (action.isAttacking && interact.PickedUpObject)
             {
                 interact.Throw();
+                actionDebug += "attack ";
+                actionExecuted = true;
             }
+        }
+        
+        // Debug output only if an action was executed
+        if (actionExecuted)
+        {
+            actionDebug += $"at time {action.timestamp:F2}s jumpHeld:{action.jumpHeld}";
+            Debug.Log(actionDebug);
         }
     }
     

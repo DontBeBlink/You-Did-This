@@ -71,6 +71,7 @@ public class PlayerController : MonoBehaviour {
             character.Jump();
         }
         jumpHeld = true;
+        // Note: JustJumped flag is set by CharacterController2D.Jump() method
     }
 
     private void EndJump(InputAction.CallbackContext context) {
@@ -80,27 +81,20 @@ public class PlayerController : MonoBehaviour {
 
     private void Dash(InputAction.CallbackContext context) {
         character.Dash(axis);
-        if (actionRecorder != null) {
-            actionRecorder.IsDashing = true;
-            actionRecorder.DashDirection = axis;
-        }
+        // Note: JustDashed flag is set by CharacterController2D.Dash() method
     }
 
     private void Interact(InputAction.CallbackContext context) {
         if (interact) {
             interact.Interact();
-            if (actionRecorder != null) {
-                actionRecorder.IsInteracting = true;
-            }
+            // Note: JustInteracted flag is set by InteractSystem.Interact() method
         }
     }
 
     private void Attack(InputAction.CallbackContext context) {
         if (interact && interact.PickedUpObject) {
             interact.Throw();
-            if (actionRecorder != null) {
-                actionRecorder.IsAttacking = true;
-            }
+            // Note: JustAttacked flag is set by InteractSystem.Throw() method
         }
     }
 

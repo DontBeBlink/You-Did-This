@@ -59,14 +59,19 @@ public class CloneManager : MonoBehaviour
     
     private void Update()
     {
-        // Handle manual loop triggering
+        // Handle manual loop triggering with debug output
         if (enableManualLooping && Input.GetKeyDown(manualLoopKey))
         {
+            Debug.Log($"Manual loop key ({manualLoopKey}) pressed! Clone count: {allClones.Count}, Max: {maxClones}");
             if (allClones.Count < maxClones)
             {
                 CreateClone();
                 StartNewLoop();
-                Debug.Log("Manual loop triggered!");
+                Debug.Log("Manual loop triggered successfully!");
+            }
+            else
+            {
+                Debug.LogWarning("Cannot create manual loop: Maximum clone limit reached!");
             }
         }
         
