@@ -18,7 +18,9 @@ public class PlayerController : MonoBehaviour {
     private CameraController cameraController;
     private CheckpointSystem checkpoint;
     private InteractSystem interact;
+    private ActionRecorder actionRecorder;
     private Vector2 axis;
+    private bool jumpHeld;
 
     /// <summary>
     /// Awake is called when the script instance is being loaded.
@@ -27,6 +29,7 @@ public class PlayerController : MonoBehaviour {
         character = GetComponent<CharacterController2D>();
         checkpoint = GetComponent<CheckpointSystem>();
         interact = GetComponent<InteractSystem>();
+        actionRecorder = GetComponent<ActionRecorder>();
         cameraController = GameObject.FindFirstObjectByType<CameraController>();
         if (!cameraController) {
             Debug.LogError("The scene is missing a camera controller! The player script needs it to work properly!");
@@ -44,13 +47,24 @@ public class PlayerController : MonoBehaviour {
     /// <summary>
     /// Update is called every frame, if the MonoBehaviour is enabled.
     /// </summary>
-    void FixedUpdate() {
+    void FixedUpdate()
+    {
+        // Update action recorder BEFORE applying movement, so the recorded value matches this frame's input
+        if (actionRecorder != null)
+        {
+            //actionRecorder.CurrentMovement = axis.x;
+            actionRecorder.JumpHeld = jumpHeld;
+        }
         character.Walk(axis.x);
         character.ClimbLadder(axis.y);
     }
 
     private void Move(Vector2 _axis) {
         axis = _axis;
+        if (actionRecorder != null)
+        {
+            actionRecorder.CurrentMovement = _axis.x;
+        }
     }
 
     private void Jump(InputAction.CallbackContext context) {
@@ -59,25 +73,31 @@ public class PlayerController : MonoBehaviour {
         } else {
             character.Jump();
         }
+        jumpHeld = true;
+        // Note: JustJumped flag is set by CharacterController2D.Jump() method
     }
 
     private void EndJump(InputAction.CallbackContext context) {
         character.EndJump();
+        jumpHeld = false;
     }
 
     private void Dash(InputAction.CallbackContext context) {
         character.Dash(axis);
+        // Note: JustDashed flag is set by CharacterController2D.Dash() method
     }
 
     private void Interact(InputAction.CallbackContext context) {
         if (interact) {
             interact.Interact();
+            // Note: JustInteracted flag is set by InteractSystem.Interact() method
         }
     }
 
     private void Attack(InputAction.CallbackContext context) {
         if (interact && interact.PickedUpObject) {
             interact.Throw();
+            // Note: JustAttacked flag is set by InteractSystem.Throw() method
         }
     }
 

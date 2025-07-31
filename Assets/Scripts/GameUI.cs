@@ -8,14 +8,15 @@ public class GameUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI cloneCountText;
     [SerializeField] private TextMeshProUGUI instructionsText;
     [SerializeField] private TextMeshProUGUI statusText;
+    [SerializeField] private TextMeshProUGUI loopTimerText;
     [SerializeField] private Button retractButton;
     [SerializeField] private Button createCloneButton;
     
-   // private CloneManager cloneManager;
+    private CloneManager cloneManager;
     
     private void Start()
     {
-       /* cloneManager = FindFirstObjectByType<CloneManager>();
+        cloneManager = FindFirstObjectByType<CloneManager>();
         
         // Set up button events
         if (retractButton != null)
@@ -23,11 +24,11 @@ public class GameUI : MonoBehaviour
         
         if (createCloneButton != null)
             createCloneButton.onClick.AddListener(() => cloneManager?.CreateClone());
-        */
+            
         // Set initial instructions
         if (instructionsText != null)
         {
-            instructionsText.text = "WASD: Move\nSpace: Jump\n2: Create Clone\n1: Retract Clone";
+            instructionsText.text = "WASD: Move\nSpace: Jump\nAutomatic loop every 15s\nL: Manual loop";
         }
     }
     
@@ -38,13 +39,26 @@ public class GameUI : MonoBehaviour
     
     private void UpdateUI()
     {
-        /*
         if (cloneManager == null) return;
         
         // Update clone count
         if (cloneCountText != null)
         {
             cloneCountText.text = $"Clones: {cloneManager.TotalClones} | Stuck: {cloneManager.StuckClones}";
+        }
+        
+        // Update loop timer
+        if (loopTimerText != null)
+        {
+            if (cloneManager.IsLoopActive)
+            {
+                float timeLeft = cloneManager.TimeUntilNextLoop;
+                loopTimerText.text = $"Next Loop: {timeLeft:F1}s";
+            }
+            else
+            {
+                loopTimerText.text = "Loop Inactive";
+            }
         }
         
         // Update status
@@ -57,7 +71,7 @@ public class GameUI : MonoBehaviour
             }
             else
             {
-                statusText.text = "No Active Clone";
+                statusText.text = "Player Active";
             }
         }
         
@@ -67,8 +81,12 @@ public class GameUI : MonoBehaviour
             bool canRetract = cloneManager.TotalClones > 1;
             if (cloneManager.ActiveCloneIndex > 0)
             {
-                var previousClone = cloneManager.GetAllClones()[cloneManager.ActiveCloneIndex - 1];
-                canRetract = canRetract && !previousClone.IsStuck;
+                var allClones = cloneManager.GetAllClones();
+                if (cloneManager.ActiveCloneIndex - 1 < allClones.Count)
+                {
+                    var previousClone = allClones[cloneManager.ActiveCloneIndex - 1];
+                    canRetract = canRetract && !previousClone.IsStuck;
+                }
             }
             retractButton.interactable = canRetract;
         }
@@ -77,6 +95,5 @@ public class GameUI : MonoBehaviour
         {
             createCloneButton.interactable = cloneManager.TotalClones < 10; // Max clones
         }
-        */
     }
 }
