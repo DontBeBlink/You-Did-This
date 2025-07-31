@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class CloneManager : MonoBehaviour
 {
@@ -8,7 +9,7 @@ public class CloneManager : MonoBehaviour
     [SerializeField] private int maxClones = 10; // Maximum number of clones
     [SerializeField] private bool autoStartFirstLoop = true;
     [SerializeField] private bool enableManualLooping = true; // Allow manual loop triggering
-    [SerializeField] private KeyCode manualLoopKey = KeyCode.L;
+    [SerializeField] private Key manualLoopKey = Key.L; // Use new Input System Key
     
     [Header("Clone Prefab")]
     [SerializeField] private GameObject clonePrefab; // If null, will clone the player object
@@ -59,8 +60,8 @@ public class CloneManager : MonoBehaviour
     
     private void Update()
     {
-        // Handle manual loop triggering with debug output
-        if (enableManualLooping && Input.GetKeyDown(manualLoopKey))
+        // Handle manual loop triggering with debug output using new Input System
+        if (enableManualLooping && Keyboard.current != null && Keyboard.current[manualLoopKey].wasPressedThisFrame)
         {
             Debug.Log($"Manual loop key ({manualLoopKey}) pressed! Clone count: {allClones.Count}, Max: {maxClones}");
             if (allClones.Count < maxClones)

@@ -119,9 +119,16 @@ public class ActionRecorder : MonoBehaviour
             return;
         }
 
+        // Check if enough time has passed since last recording
+        if (Time.time - lastRecordTime < recordingInterval)
+        {
+            return;
+        }
+        lastRecordTime = Time.time;
+
         PlayerAction action = new PlayerAction(
             currentTime,
-            character.TotalSpeed,           // Use actual movement after physics
+            CurrentMovement,                // Use input movement from PlayerController
             character.JustJumped,
             character.JustDashed,
             character.LastDashDirection,

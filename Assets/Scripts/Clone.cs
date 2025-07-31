@@ -139,10 +139,6 @@ public class Clone : MonoBehaviour
     {
         if (isStuck) return;
         
-        // Debug output for action execution
-        bool actionExecuted = false;
-        string actionDebug = $"Clone {cloneIndex} executing: ";
-        
         // Execute movement
         if (character != null)
         {
@@ -150,8 +146,6 @@ public class Clone : MonoBehaviour
             {
                 character.Walk(action.movement.x);
                 character.ClimbLadder(action.movement.y);
-                actionDebug += $"move({action.movement.x:F2},{action.movement.y:F2}) ";
-                actionExecuted = true;
             }
             
             if (action.isJumping)
@@ -159,30 +153,23 @@ public class Clone : MonoBehaviour
                 if (action.movement.y < 0)
                 {
                     character.JumpDown();
-                    actionDebug += "jumpDown ";
                 }
                 else
                 {
                     character.Jump();
-                    actionDebug += "jump ";
                 }
-                actionExecuted = true;
             }
             
             // Handle jump hold duration - EndJump when transitioning from held to not held
             if (wasJumpHeld && !action.jumpHeld)
             {
                 character.EndJump();
-                actionDebug += "endJump ";
-                actionExecuted = true;
             }
             wasJumpHeld = action.jumpHeld;
             
             if (action.isDashing)
             {
                 character.Dash(action.dashDirection);
-                actionDebug += $"dash({action.dashDirection.x:F2},{action.dashDirection.y:F2}) ";
-                actionExecuted = true;
             }
         }
         
@@ -192,23 +179,12 @@ public class Clone : MonoBehaviour
             if (action.isInteracting)
             {
                 interact.Interact();
-                actionDebug += "interact ";
-                actionExecuted = true;
             }
             
             if (action.isAttacking && interact.PickedUpObject)
             {
                 interact.Throw();
-                actionDebug += "attack ";
-                actionExecuted = true;
             }
-        }
-        
-        // Debug output only if an action was executed
-        if (actionExecuted)
-        {
-            actionDebug += $"at time {action.timestamp:F2}s jumpHeld:{action.jumpHeld}";
-            Debug.Log(actionDebug);
         }
     }
     
