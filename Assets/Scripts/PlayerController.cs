@@ -20,6 +20,7 @@ public class PlayerController : MonoBehaviour {
     private InteractSystem interact;
     private ActionRecorder actionRecorder;
     private Vector2 axis;
+    private bool jumpHeld;
 
     /// <summary>
     /// Awake is called when the script instance is being loaded.
@@ -46,20 +47,16 @@ public class PlayerController : MonoBehaviour {
     /// <summary>
     /// Update is called every frame, if the MonoBehaviour is enabled.
     /// </summary>
-    void FixedUpdate() {
+    void FixedUpdate()
+    {
         character.Walk(axis.x);
         character.ClimbLadder(axis.y);
-        
+
         // Update action recorder if available
-        if (actionRecorder != null) {
+        if (actionRecorder != null)
+        {
             actionRecorder.CurrentMovement = axis;
-        }
-    }
-    
-    void Update() {
-        // Reset frame inputs for action recorder
-        if (actionRecorder != null) {
-            actionRecorder.ResetFrameInputs();
+            actionRecorder.JumpHeld = jumpHeld;
         }
     }
 
@@ -73,21 +70,16 @@ public class PlayerController : MonoBehaviour {
         } else {
             character.Jump();
         }
-        
-        // Record jump action
-        if (actionRecorder != null) {
-            actionRecorder.IsJumping = true;
-        }
+        jumpHeld = true;
     }
 
     private void EndJump(InputAction.CallbackContext context) {
         character.EndJump();
+        jumpHeld = false;
     }
 
     private void Dash(InputAction.CallbackContext context) {
         character.Dash(axis);
-        
-        // Record dash action
         if (actionRecorder != null) {
             actionRecorder.IsDashing = true;
             actionRecorder.DashDirection = axis;
@@ -97,8 +89,6 @@ public class PlayerController : MonoBehaviour {
     private void Interact(InputAction.CallbackContext context) {
         if (interact) {
             interact.Interact();
-            
-            // Record interact action
             if (actionRecorder != null) {
                 actionRecorder.IsInteracting = true;
             }
@@ -108,8 +98,6 @@ public class PlayerController : MonoBehaviour {
     private void Attack(InputAction.CallbackContext context) {
         if (interact && interact.PickedUpObject) {
             interact.Throw();
-            
-            // Record attack action
             if (actionRecorder != null) {
                 actionRecorder.IsAttacking = true;
             }

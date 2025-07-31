@@ -45,6 +45,11 @@ public class CharacterController2D : ObjectController2D {
     public bool Invulnerable => invulnerableTime > 0;
     public bool Immobile { get; set; }
     public bool Dashing { get; set; }
+    public bool JustJumped { get; set; }
+    public bool JustDashed { get; set; }
+    public Vector2 LastDashDirection { get; set; }
+    public bool JustInteracted { get; set; }
+    public bool JustAttacked { get; set; }
 
     /// <summary>
     /// Start is called on the frame when a script is enabled just before
@@ -70,6 +75,19 @@ public class CharacterController2D : ObjectController2D {
         Move((TotalSpeed) * Time.fixedDeltaTime);
         PostMove();
         SetAnimations();
+
+        // After all movement/physics is applied, record the state
+        var recorder = GetComponent<ActionRecorder>();
+        if (recorder != null && recorder.IsRecording) {
+            recorder.RecordFromCharacter(this);
+        }
+
+        // Reset one-frame action flags after recording
+        JustJumped = false;
+        JustDashed = false;
+        JustInteracted = false;
+        JustAttacked = false;
+        LastDashDirection = Vector2.zero;
     }
 
     /*-------------------------*/
@@ -394,6 +412,7 @@ public class CharacterController2D : ObjectController2D {
                 if (soundManager) {
                     soundManager.PlayJumpSound();
                 }
+                JustJumped = true;
             }
         }
     }
@@ -454,6 +473,8 @@ public class CharacterController2D : ObjectController2D {
             dashCooldown = cData.maxDashCooldown;
             airStaggerTime = cData.dashStagger;
             Invoke("StopDash", cData.dashDistance / cData.dashSpeed);
+            JustDashed = true;
+            LastDashDirection = direction;
         }
     }
 

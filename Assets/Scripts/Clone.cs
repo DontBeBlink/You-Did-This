@@ -7,7 +7,7 @@ public class Clone : MonoBehaviour
     [Header("Clone Settings")]
     [SerializeField] private Material cloneMaterial;
     [SerializeField] private Color cloneColor = Color.cyan;
-    [SerializeField] private float cloneAlpha = 0.7f;
+    [SerializeField] private float cloneAlpha = 0.4f;
     
     private List<PlayerAction> actionsToReplay;
     private CharacterController2D character;
@@ -116,6 +116,7 @@ public class Clone : MonoBehaviour
                 replayStartTime = Time.time;
                 currentActionIndex = 0;
                 Debug.Log($"Clone {cloneIndex} looping replay");
+                this.transform.position = CloneManager.instance.transform.position; // Reset position if needed
             }
             return;
         }

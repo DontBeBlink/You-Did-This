@@ -28,15 +28,19 @@ public class CloneManager : MonoBehaviour
     public System.Action<Clone> OnCloneStuck;
     public System.Action OnNewLoopStarted;
     
+    public static CloneManager instance { get; private set; }
+
     private void Awake()
     {
+        instance = this;
+
         activePlayer = FindFirstObjectByType<PlayerController>();
         if (activePlayer == null)
         {
             Debug.LogError("CloneManager: No PlayerController found in scene!");
             return;
         }
-        
+
         // Add ActionRecorder to player if it doesn't exist
         actionRecorder = activePlayer.GetComponent<ActionRecorder>();
         if (actionRecorder == null)
@@ -126,12 +130,12 @@ public class CloneManager : MonoBehaviour
         if (clonePrefab != null)
         {
             // Use the specified prefab
-            cloneObject = Instantiate(clonePrefab, activePlayer.transform.position, activePlayer.transform.rotation);
+            cloneObject = Instantiate(clonePrefab, this.transform.position, activePlayer.transform.rotation);
         }
         else
         {
             // Clone the current player object
-            cloneObject = Instantiate(activePlayer.gameObject, activePlayer.transform.position, activePlayer.transform.rotation);
+            cloneObject = Instantiate(activePlayer.gameObject, this.transform.position, activePlayer.transform.rotation);
         }
         
         // Get or add Clone component
@@ -155,6 +159,8 @@ public class CloneManager : MonoBehaviour
             AudioManager.Instance.PlaySound(cloneCreateSound);
         }
         
+        activePlayer.transform.position = this.transform.position; // Reset player position to clone spawn point
+
         OnCloneCreated?.Invoke(clone);
         Debug.Log($"Created clone {clone.CloneIndex} with {recordedActions.Count} actions");
     }
