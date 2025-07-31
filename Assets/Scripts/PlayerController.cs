@@ -49,19 +49,22 @@ public class PlayerController : MonoBehaviour {
     /// </summary>
     void FixedUpdate()
     {
-        character.Walk(axis.x);
-        character.ClimbLadder(axis.y);
-
-        // Update action recorder if available
+        // Update action recorder BEFORE applying movement, so the recorded value matches this frame's input
         if (actionRecorder != null)
         {
-            actionRecorder.CurrentMovement = axis;
+            //actionRecorder.CurrentMovement = axis.x;
             actionRecorder.JumpHeld = jumpHeld;
         }
+        character.Walk(axis.x);
+        character.ClimbLadder(axis.y);
     }
 
     private void Move(Vector2 _axis) {
         axis = _axis;
+        if (actionRecorder != null)
+        {
+            actionRecorder.CurrentMovement = _axis.x;
+        }
     }
 
     private void Jump(InputAction.CallbackContext context) {

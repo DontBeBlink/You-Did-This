@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using NUnit.Framework.Interfaces;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -10,7 +11,7 @@ public class CloneManager : MonoBehaviour
     [SerializeField] private bool autoStartFirstLoop = true;
     [SerializeField] private bool enableManualLooping = true; // Allow manual loop triggering
     [SerializeField] private Key manualLoopKey = Key.L; // Use new Input System Key
-    
+
     [Header("Clone Prefab")]
     [SerializeField] private GameObject clonePrefab; // If null, will clone the player object
     
@@ -28,6 +29,10 @@ public class CloneManager : MonoBehaviour
     public System.Action<Clone> OnCloneCreated;
     public System.Action<Clone> OnCloneStuck;
     public System.Action OnNewLoopStarted;
+
+    // New loop lifecycle events
+    public static event System.Action OnLoopStarted;
+    public static event System.Action OnLoopEnded;
     
     public static CloneManager instance { get; private set; }
 
@@ -35,22 +40,26 @@ public class CloneManager : MonoBehaviour
     {
         instance = this;
 
+        
         activePlayer = FindFirstObjectByType<PlayerController>();
+
         if (activePlayer == null)
         {
             Debug.LogError("CloneManager: No PlayerController found in scene!");
             return;
         }
 
+        activePlayer.transform.position = this.transform.position; // Reset player position to spawn point
+
         // Add ActionRecorder to player if it doesn't exist
         actionRecorder = activePlayer.GetComponent<ActionRecorder>();
         if (actionRecorder == null)
         {
             actionRecorder = activePlayer.gameObject.AddComponent<ActionRecorder>();
-            Debug.Log("CloneManager: Added ActionRecorder component to player");
+            //Debug.Log("CloneManager: Added ActionRecorder component to player");
         }
         
-        Debug.Log($"CloneManager: Setup complete. Manual loop key: {manualLoopKey}, Auto start: {autoStartFirstLoop}");
+       // Debug.Log($"CloneManager: Setup complete. Manual loop key: {manualLoopKey}, Auto start: {autoStartFirstLoop}");
     }
     
     private void Start()
@@ -78,40 +87,40 @@ public class CloneManager : MonoBehaviour
                 Debug.LogWarning("Cannot create manual loop: Maximum clone limit reached!");
             }
         }
-        
+
         // Automatic loop timing
         if (isLoopActive && Time.time - loopStartTime >= loopDuration)
         {
-            if (allClones.Count < maxClones)
-            {
-                CreateClone();
-                StartNewLoop();
-            }
-            else
-            {
-                Debug.Log("Maximum clone limit reached!");
-            }
+
+            CreateClone();
+            StartNewLoop();
         }
     }
     
     public void StartNewLoop()
     {
         if (actionRecorder == null) return;
-        
+
+        // End previous loop if active
+        if (isLoopActive)
+        {
+            OnLoopEnded?.Invoke();
+        }
+
         // Stop recording current actions
         if (actionRecorder.IsRecording)
         {
             actionRecorder.StopRecording();
         }
-        
+
         isLoopActive = true;
         loopStartTime = Time.time;
-        
+
         // Start recording new actions
         actionRecorder.StartRecording();
-        
+
         OnNewLoopStarted?.Invoke();
-        Debug.Log($"New loop started! Duration: {loopDuration} seconds");
+        OnLoopStarted?.Invoke();
     }
     
     public void CreateClone()
@@ -128,10 +137,15 @@ public class CloneManager : MonoBehaviour
             return;
         }
         
+        // If at maxClones, remove the oldest clone (first in the list)
         if (allClones.Count >= maxClones)
         {
-            Debug.LogWarning($"Maximum clone limit ({maxClones}) reached - cannot create more clones");
-            return;
+            if (allClones[0] != null)
+            {
+                Destroy(allClones[0].gameObject);
+            }
+            allClones.RemoveAt(0);
+            Debug.Log($"Clone limit reached. Oldest clone destroyed to make room for new one.");
         }
 
         GameObject cloneObject;
@@ -171,7 +185,7 @@ public class CloneManager : MonoBehaviour
         activePlayer.transform.position = this.transform.position; // Reset player position to clone spawn point
 
         OnCloneCreated?.Invoke(clone);
-        Debug.Log($"Created clone {clone.CloneIndex} with {recordedActions.Count} actions");
+        //Debug.Log($"Created clone {clone.CloneIndex} with {recordedActions.Count} actions");
     }
     
     public void SetCloneStuck(Clone clone, Goal goal)

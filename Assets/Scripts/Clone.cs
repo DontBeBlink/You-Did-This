@@ -82,7 +82,7 @@ public class Clone : MonoBehaviour
         }
         
         SetupCloneVisuals();
-        Debug.Log($"Clone {index} initialized with {actionsToReplay.Count} actions, duration: {replayDuration:F1}s");
+      //  Debug.Log($"Clone {index} initialized with {actionsToReplay.Count} actions, duration: {replayDuration:F1}s");
     }
     
     public void StartReplay()
@@ -92,12 +92,27 @@ public class Clone : MonoBehaviour
             Debug.LogWarning("No actions to replay for clone");
             return;
         }
-        
+
+        if (character == null)
+        {
+            character = GetComponent<CharacterController2D>();
+            if (character == null)
+            {
+                Debug.LogError("Clone: CharacterController2D component missing!");
+                return;
+            }
+        }
+        if (actionsToReplay != null && actionsToReplay.Count > 0)
+        {
+            var firstAction = actionsToReplay[0];
+            character.SetPhysicsState(firstAction.position, firstAction.speed, firstAction.externalForce);
+        }
+
         isReplaying = true;
         replayStartTime = Time.time;
         currentActionIndex = 0;
         wasJumpHeld = false; // Reset jump held state
-        Debug.Log($"Clone {cloneIndex} started replaying actions");
+        //Debug.Log($"Clone {cloneIndex} started replaying actions");
     }
     
     private void Update()
@@ -107,7 +122,18 @@ public class Clone : MonoBehaviour
             UpdateReplay();
         }
     }
+
+    private void FixedUpdate()
+    {
+        if (isReplaying && !isStuck && character != null && lastActionReplayed.HasValue)
+        {
+            character.Walk(lastActionReplayed.Value.movement);
+        }
+    }
     
+    // Store the last action that was replayed, so we can keep applying its movement
+    private PlayerAction? lastActionReplayed = null;
+
     private void UpdateReplay()
     {
         if (actionsToReplay == null || currentActionIndex >= actionsToReplay.Count)
@@ -120,44 +146,44 @@ public class Clone : MonoBehaviour
                 wasJumpHeld = false; // Reset jump held state for loop
                 Debug.Log($"Clone {cloneIndex} looping replay");
                 this.transform.position = CloneManager.instance.transform.position; // Reset position if needed
+                lastActionReplayed = null;
             }
             return;
         }
-        
+
         float currentReplayTime = Time.time - replayStartTime;
-        
+
         // Find the current action to execute
         while (currentActionIndex < actionsToReplay.Count && 
                actionsToReplay[currentActionIndex].timestamp <= currentReplayTime)
         {
             ExecuteAction(actionsToReplay[currentActionIndex]);
+            lastActionReplayed = actionsToReplay[currentActionIndex];
             currentActionIndex++;
+        }
+
+        // If no new action was executed this frame, keep using the last one
+        if (lastActionReplayed == null && actionsToReplay.Count > 0)
+        {
+            lastActionReplayed = actionsToReplay[0];
         }
     }
     
     private void ExecuteAction(PlayerAction action)
     {
+        //Debug.Log($"[Replay] t={action.timestamp:F2} move={action.movement} jump={action.isJumping} dash={action.isDashing} held={action.jumpHeld}");
         if (isStuck) return;
         
         // Execute movement
         if (character != null)
         {
-            if (action.movement.x != 0 || action.movement.y != 0)
-            {
-                character.Walk(action.movement.x);
-                character.ClimbLadder(action.movement.y);
-            }
-            
+           
+            character.Walk(action.movement);
+            character.SetPhysicsState(action.position, action.speed, action.externalForce);
             if (action.isJumping)
             {
-                if (action.movement.y < 0)
-                {
-                    character.JumpDown();
-                }
-                else
-                {
-                    character.Jump();
-                }
+
+                character.Jump();
             }
             
             // Handle jump hold duration - EndJump when transitioning from held to not held
@@ -226,6 +252,6 @@ public class Clone : MonoBehaviour
     
     private void OnDestroy()
     {
-        Debug.Log($"Clone {cloneIndex} destroyed");
+        //Debug.Log($"Clone {cloneIndex} destroyed");
     }
 }

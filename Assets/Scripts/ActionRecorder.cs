@@ -5,7 +5,7 @@ using UnityEngine;
 public struct PlayerAction
 {
     public float timestamp;
-    public Vector2 movement;
+    public float movement;
     public bool isJumping;
     public bool isDashing;
     public Vector2 dashDirection;
@@ -13,8 +13,10 @@ public struct PlayerAction
     public bool isAttacking;
     public Vector3 position;
     public bool jumpHeld;
+    public Vector2 speed;
+    public Vector2 externalForce;
 
-    public PlayerAction(float time, Vector2 move, bool jump, bool dash, Vector2 dashDir, bool interact, bool attack, Vector3 pos, bool jumpHeld)
+    public PlayerAction(float time, float move, bool jump, bool dash, Vector2 dashDir, bool interact, bool attack, Vector3 pos, bool jumpHeld, Vector2 speed, Vector2 externalForce)
     {
         timestamp = time;
         movement = move;
@@ -25,6 +27,8 @@ public struct PlayerAction
         isAttacking = attack;
         position = pos;
         this.jumpHeld = jumpHeld;
+        this.speed = speed;
+        this.externalForce = externalForce;
     }
 }
 
@@ -40,7 +44,7 @@ public class ActionRecorder : MonoBehaviour
     private float lastRecordTime;
 
     // Current frame inputs (set by PlayerController)
-    public Vector2 CurrentMovement { get; set; }
+    public float CurrentMovement { get; set; }
     public bool IsJumping { get; set; }
     public bool IsDashing { get; set; }
     public Vector2 DashDirection { get; set; }
@@ -60,7 +64,7 @@ public class ActionRecorder : MonoBehaviour
         recordingStartTime = Time.time;
         lastRecordTime = Time.time;
         recordedActions.Clear();
-        Debug.Log($"Started recording player actions at time {recordingStartTime:F2}");
+       // Debug.Log($"Started recording player actions at time {recordingStartTime:F2}");
     }
 
     public void StopRecording()
@@ -69,7 +73,7 @@ public class ActionRecorder : MonoBehaviour
         {
             isRecording = false;
             float duration = Time.time - recordingStartTime;
-            Debug.Log($"Stopped recording. Total actions: {recordedActions.Count}, Duration: {duration:F2}s");
+            //Debug.Log($"Stopped recording. Total actions: {recordedActions.Count}, Duration: {duration:F2}s");
         }
     }
 
@@ -86,6 +90,7 @@ public class ActionRecorder : MonoBehaviour
             return;
         }
 
+        // Not used for physics-perfect replay, so just use Vector2.zero for speed/externalForce
         PlayerAction action = new PlayerAction(
             currentTime,
             CurrentMovement,
@@ -95,7 +100,9 @@ public class ActionRecorder : MonoBehaviour
             IsInteracting,
             IsAttacking,
             transform.position,
-            JumpHeld // Use the jumpHeld state from PlayerController
+            JumpHeld, // Use the jumpHeld state from PlayerController
+            Vector2.zero,
+            Vector2.zero
         );
 
         recordedActions.Add(action);
@@ -118,25 +125,21 @@ public class ActionRecorder : MonoBehaviour
             return;
         }
 
-        // Check if enough time has passed since last recording
-        if (Time.time - lastRecordTime < recordingInterval)
-        {
-            return;
-        }
         lastRecordTime = Time.time;
-
+        // Record jumpHeld transitions frame-perfectly, just like movement
         PlayerAction action = new PlayerAction(
             currentTime,
-            CurrentMovement,                // Use input movement from PlayerController
+            CurrentMovement,
             character.JustJumped,
             character.JustDashed,
             character.LastDashDirection,
             character.JustInteracted,
             character.JustAttacked,
             character.transform.position,
-            JumpHeld // Pass the jumpHeld state from PlayerController
+            JumpHeld, // This is set by PlayerController and reflects the current jump button state
+            character.GetType().GetField("speed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance) != null ? (Vector2)character.GetType().GetField("speed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(character) : Vector2.zero,
+            character.GetType().GetField("externalForce", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance) != null ? (Vector2)character.GetType().GetField("externalForce", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(character) : Vector2.zero
         );
-
         recordedActions.Add(action);
     }
 
