@@ -60,18 +60,17 @@ public class ActionRecorder : MonoBehaviour
         recordingStartTime = Time.time;
         lastRecordTime = Time.time;
         recordedActions.Clear();
-        RecordCurrentAction(); // Ensure first action is always recorded
-        Debug.Log("Started recording player actions");
+        Debug.Log($"Started recording player actions at time {recordingStartTime:F2}");
     }
 
     public void StopRecording()
     {
         if (isRecording)
         {
-            RecordCurrentAction(); // Ensure last action is always recorded
+            isRecording = false;
+            float duration = Time.time - recordingStartTime;
+            Debug.Log($"Stopped recording. Total actions: {recordedActions.Count}, Duration: {duration:F2}s");
         }
-        isRecording = false;
-        Debug.Log($"Stopped recording. Total actions: {recordedActions.Count}");
     }
 
     // This is only used if you want to record from PlayerController (not recommended for physics-perfect replay)

@@ -47,7 +47,10 @@ public class CloneManager : MonoBehaviour
         if (actionRecorder == null)
         {
             actionRecorder = activePlayer.gameObject.AddComponent<ActionRecorder>();
+            Debug.Log("CloneManager: Added ActionRecorder component to player");
         }
+        
+        Debug.Log($"CloneManager: Setup complete. Manual loop key: {manualLoopKey}, Auto start: {autoStartFirstLoop}");
     }
     
     private void Start()
