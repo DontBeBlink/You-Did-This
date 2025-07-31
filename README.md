@@ -75,6 +75,9 @@ Navigate through puzzle levels by strategically creating clones of yourself. Eac
    - Press Play to test core mechanics
    - Use F1 to toggle debug information
 
+### Quick Start Guide
+For a comprehensive setup checklist and testing guide, see [QUICK_START.md](QUICK_START.md).
+
 ### Clone System Setup
 The clone system auto-configures when you add a `CloneManager` component to any GameObject in your scene. See [CLONE_SYSTEM_SETUP.md](CLONE_SYSTEM_SETUP.md) for detailed configuration options.
 
@@ -128,6 +131,9 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines 
 
 ### Technical Architecture
 For detailed technical documentation about the game's systems and architecture, see [ARCHITECTURE.md](ARCHITECTURE.md).
+
+### Building the Game
+To create builds for distribution, see our [BUILD.md](BUILD.md) guide with platform-specific instructions.
 
 ## 📝 Development Status
 
