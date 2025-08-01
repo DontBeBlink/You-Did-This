@@ -452,4 +452,7 @@ Important Events:
 
 This guide provides the foundation for creating engaging puzzle levels. Combine these systems creatively to build challenging, satisfying experiences that showcase the unique clone mechanics of **You Did This**.
 
-For specific puzzle ideas and detailed room designs, see [PUZZLE_IDEAS.md](PUZZLE_IDEAS.md).
+## 📚 Related Documentation
+
+- **[Puzzle Ideas](PUZZLE_IDEAS.md)**: Detailed puzzle concepts, room layouts, and implementation plans
+- **[Example Scene Template](EXAMPLE_SCENE_TEMPLATE.md)**: Step-by-step template for creating a basic pressure plate puzzle scene
