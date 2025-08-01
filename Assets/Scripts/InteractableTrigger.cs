@@ -7,7 +7,7 @@ using UnityEngine;
 /// </summary>
 [RequireComponent(typeof(TriggerObject))]
 public class InteractableTrigger : InteractableObject {
-    private TriggerObject trigger;
+    protected TriggerObject trigger;
 
     /// <summary>
     /// Start is called on the frame when a script is enabled just before
