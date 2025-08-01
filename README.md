@@ -129,6 +129,12 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines 
 - Issue reporting
 - Level design contributions
 
+### Level Design
+For creators interested in building new levels and puzzles:
+- **[Level Design Guide](LEVEL_DESIGN.md)**: Comprehensive guide to creating levels using the existing systems
+- **[Puzzle Ideas](PUZZLE_IDEAS.md)**: Detailed puzzle concepts, room layouts, and implementation plans
+- Both guides cover the trigger system, logic gates, goals, and step-by-step creation workflows
+
 ### Technical Architecture
 For detailed technical documentation about the game's systems and architecture, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
