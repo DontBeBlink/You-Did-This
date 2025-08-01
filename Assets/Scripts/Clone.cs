@@ -5,22 +5,6 @@ using UnityEngine;
 /// Individual clone instance that replays recorded player actions for puzzle-solving.
 /// Each clone represents a "ghost" of the player's previous actions, faithfully reproducing
 /// movement, input timing, and interactions to serve as puzzle elements.
-/// 
-/// Core Functionality:
-/// - Replays a sequence of PlayerAction data with precise timing
-/// - Loops replay automatically when reaching the end of actions
-/// - Can become "stuck" at goals to act as permanent puzzle elements
-/// - Maintains physics-perfect reproduction of original player behavior
-/// - Provides visual distinction from the active player (cyan, semi-transparent)
-/// 
-/// Lifecycle:
-/// 1. Created by CloneManager with recorded action sequence
-/// 2. Begins replay immediately, starting from spawn position
-/// 3. Continuously loops through actions until stuck at a goal
-/// 4. When stuck, becomes immobile and changes to green coloring
-/// 5. Destroyed when clone limit is reached or level is reset
-/// 
-/// Usage: Created and managed automatically by CloneManager. Not instantiated directly.
 /// </summary>
 [RequireComponent(typeof(CharacterController2D))]
 public class Clone : MonoBehaviour
@@ -29,28 +13,28 @@ public class Clone : MonoBehaviour
     [SerializeField] private Material cloneMaterial;           // Optional custom material for clone appearance
     [SerializeField] private Color cloneColor = Color.cyan;    // Base color for active clones
     [SerializeField] private float cloneAlpha = 0.4f;          // Transparency level to distinguish from player
-    
+
     // Core components required for action replay
     private List<PlayerAction> actionsToReplay;   // Sequence of actions to reproduce
     private CharacterController2D character;      // Physics and movement controller
     private InteractSystem interact;              // Object interaction system
     private SpriteRenderer spriteRenderer;        // Visual rendering component
-    
+
     // Replay state management
     private bool isReplaying = false;            // Whether currently playing back actions
     private bool isStuck = false;                // Whether stuck at a goal (permanent state)
     private float replayStartTime;               // Time.time when current replay loop started
     private int currentActionIndex = 0;          // Index of next action to execute
     private float replayDuration;                // Total duration of action sequence
-    
+
     // Clone identification and state tracking
     private int cloneIndex;                      // Unique identifier assigned by CloneManager
     private Goal stuckAtGoal;                    // Goal where this clone is stuck (if any)
     private bool wasJumpHeld = false;            // Previous frame's jump hold state for EndJump timing
-    
+
     // Store the last executed action for continuous movement application
     private PlayerAction? lastActionReplayed = null;
-    
+
     /// <summary>
     /// Initialize clone components and set up visual appearance.
     /// Called automatically when the clone GameObject is created.
@@ -61,10 +45,10 @@ public class Clone : MonoBehaviour
         character = GetComponent<CharacterController2D>();
         interact = GetComponent<InteractSystem>();
         spriteRenderer = GetComponent<SpriteRenderer>();
-        
+
         SetupCloneVisuals();
     }
-    
+
     /// <summary>
     /// Configure the clone's visual appearance to distinguish it from the player.
     /// Sets up material, color, transparency, and GameObject naming.
@@ -78,17 +62,17 @@ public class Clone : MonoBehaviour
             {
                 spriteRenderer.material = cloneMaterial;
             }
-            
+
             // Set cyan color with transparency to visually distinguish clone
             Color color = cloneColor;
             color.a = cloneAlpha;
             spriteRenderer.color = color;
         }
-        
+
         // Name the GameObject for easier debugging and scene hierarchy viewing
         gameObject.name = $"Clone_{cloneIndex}";
     }
-    
+
     /// <summary>
     /// Initialize the clone with a sequence of recorded player actions.
     /// Disables player input components and prepares the clone for action replay.
@@ -108,28 +92,27 @@ public class Clone : MonoBehaviour
         {
             actionsToReplay = new List<PlayerAction>(actions);
         }
-        
+
         cloneIndex = index;
         // Calculate total replay duration from the last action's timestamp
         replayDuration = actionsToReplay.Count > 0 ? actionsToReplay[actionsToReplay.Count - 1].timestamp : 0f;
-        
+
         // Disable player input components to prevent interference with replay
         PlayerController playerController = GetComponent<PlayerController>();
         if (playerController != null)
         {
             playerController.enabled = false;
         }
-        
+
         ActionRecorder recorder = GetComponent<ActionRecorder>();
         if (recorder != null)
         {
             recorder.enabled = false;
         }
-        
+
         SetupCloneVisuals();
-      //  Debug.Log($"Clone {index} initialized with {actionsToReplay.Count} actions, duration: {replayDuration:F1}s");
     }
-    
+
     /// <summary>
     /// Begin replaying the recorded action sequence.
     /// Sets initial physics state and starts the replay timing system.
@@ -137,6 +120,14 @@ public class Clone : MonoBehaviour
     /// </summary>
     public void StartReplay()
     {
+        // Drop/throw any picked up object when resetting replay
+        if (interact != null && interact.PickedUpObject != null)
+        {
+            // Throw with zero force (just drop)
+            interact.PickedUpObject.Throw(Vector2.zero);
+            interact.PickedUpObject = null;
+        }
+
         // Validate that we have actions to replay
         if (actionsToReplay == null || actionsToReplay.Count == 0)
         {
@@ -154,7 +145,7 @@ public class Clone : MonoBehaviour
                 return;
             }
         }
-        
+
         // Set initial physics state from the first recorded action
         if (actionsToReplay != null && actionsToReplay.Count > 0)
         {
@@ -167,9 +158,8 @@ public class Clone : MonoBehaviour
         replayStartTime = Time.time;
         currentActionIndex = 0;
         wasJumpHeld = false; // Reset jump held state for clean start
-        //Debug.Log($"Clone {cloneIndex} started replaying actions");
     }
-    
+
     /// <summary>
     /// Update replay progress each frame for action timing.
     /// Handles action sequence progression and automatic looping.
@@ -190,10 +180,10 @@ public class Clone : MonoBehaviour
     {
         if (isReplaying && !isStuck && character != null && lastActionReplayed.HasValue)
         {
-            character.Walk(lastActionReplayed.Value.movement);
+           // character.Walk(lastActionReplayed.Value.movement);
         }
     }
-    
+
     /// <summary>
     /// Core replay logic that processes the action sequence based on timing.
     /// Handles action execution, looping, and timing synchronization.
@@ -209,9 +199,9 @@ public class Clone : MonoBehaviour
                 replayStartTime = Time.time;
                 currentActionIndex = 0;
                 wasJumpHeld = false; // Reset jump state for clean loop restart
-                //Debug.Log($"Clone {cloneIndex} looping replay");
-                // Reset position to spawn point for loop consistency
-                this.transform.position = CloneManager.instance.transform.position;
+                // Reset position to where the replay started for loop consistency
+                if (actionsToReplay != null && actionsToReplay.Count > 0)
+                    this.transform.position = actionsToReplay[0].position;
                 lastActionReplayed = null;
             }
             return;
@@ -220,7 +210,7 @@ public class Clone : MonoBehaviour
         float currentReplayTime = Time.time - replayStartTime;
 
         // Execute all actions whose timestamp has been reached
-        while (currentActionIndex < actionsToReplay.Count && 
+        while (currentActionIndex < actionsToReplay.Count &&
                actionsToReplay[currentActionIndex].timestamp <= currentReplayTime)
         {
             ExecuteAction(actionsToReplay[currentActionIndex]);
@@ -234,7 +224,7 @@ public class Clone : MonoBehaviour
             lastActionReplayed = actionsToReplay[0];
         }
     }
-    
+
     /// <summary>
     /// Execute a single PlayerAction, reproducing the player's behavior at that moment.
     /// Handles movement, jumping, dashing, and interaction commands with precise timing.
@@ -243,22 +233,21 @@ public class Clone : MonoBehaviour
     /// <param name="action">The PlayerAction to execute</param>
     private void ExecuteAction(PlayerAction action)
     {
-        //Debug.Log($"[Replay] t={action.timestamp:F2} move={action.movement} jump={action.isJumping} dash={action.isDashing} held={action.jumpHeld}");
-        if (isStuck) return; // Stuck clones don't execute actions
-        
+        if (isStuck) return;
+
         // Execute movement and physics actions
         if (character != null)
         {
-            // Apply movement input and set physics state to match recorded data
             character.Walk(action.movement);
             character.SetPhysicsState(action.position, action.speed, action.externalForce);
-            
+            UpdateAnimatorFromAction(action);
+
             // Execute jump if it was initiated this frame
             if (action.isJumping)
             {
                 character.Jump();
             }
-            
+
             // Handle variable jump height by ending jump when button is released
             // This reproduces the original jump duration precisely
             if (wasJumpHeld && !action.jumpHeld)
@@ -266,14 +255,17 @@ public class Clone : MonoBehaviour
                 character.EndJump();
             }
             wasJumpHeld = action.jumpHeld;
-            
+
             // Execute dash if it was initiated this frame
             if (action.isDashing)
             {
                 character.Dash(action.dashDirection);
             }
         }
-        
+
+        // --- NEW: Update animator directly for clones ---
+        UpdateAnimatorFromAction(action);
+
         // Execute interaction actions
         if (interact != null)
         {
@@ -282,7 +274,7 @@ public class Clone : MonoBehaviour
             {
                 interact.Interact();
             }
-            
+
             // Reproduce object throwing (attack while holding object)
             if (action.isAttacking && interact.PickedUpObject)
             {
@@ -290,7 +282,21 @@ public class Clone : MonoBehaviour
             }
         }
     }
-    
+
+    private void UpdateAnimatorFromAction(PlayerAction action)
+    {
+        if (character == null) return;
+        var animator = character.GetComponent<Animator>();
+        if (animator == null) return;
+
+        animator.SetFloat("hSpeed", action.speed.x);
+        animator.SetFloat("vSpeed", action.speed.y);
+        animator.SetBool("grounded", action.isGrounded);
+        animator.SetBool("dashing", action.isDashing);
+        animator.SetBool("onWall", action.isOnWall);
+        animator.SetBool("facingRight", action.facingRight);
+    }
+
     /// <summary>
     /// Mark this clone as "stuck" at a goal, making it a permanent puzzle element.
     /// Stuck clones stop replaying actions and become immobile obstacles or platforms.
@@ -302,13 +308,13 @@ public class Clone : MonoBehaviour
         isStuck = true;
         stuckAtGoal = goal;
         isReplaying = false;
-        
+
         // Make the character completely immobile
         if (character != null)
         {
             character.Immobile = true;
         }
-        
+
         // Change visual appearance to green to indicate stuck state
         if (spriteRenderer != null)
         {
@@ -316,10 +322,10 @@ public class Clone : MonoBehaviour
             stuckColor.a = cloneAlpha;
             spriteRenderer.color = stuckColor;
         }
-        
+
         Debug.Log($"Clone {cloneIndex} is now stuck at goal");
     }
-    
+
     /// <summary>
     /// Stop the replay without marking as stuck.
     /// Used for pausing clones or temporary replay suspension.
@@ -329,39 +335,39 @@ public class Clone : MonoBehaviour
         isReplaying = false;
         Debug.Log($"Clone {cloneIndex} stopped replaying");
     }
-    
+
     // Properties for external access to clone state
-    
+
     /// <summary>
     /// Whether this clone is currently replaying its action sequence.
     /// False when paused, stopped, or stuck.
     /// </summary>
     public bool IsReplaying => isReplaying;
-    
+
     /// <summary>
     /// Whether this clone is stuck at a goal and acting as a permanent puzzle element.
     /// Stuck clones cannot be destroyed by clone limits and do not replay actions.
     /// </summary>
     public bool IsStuck => isStuck;
-    
+
     /// <summary>
     /// Unique identifier assigned by CloneManager for this clone.
     /// Used for debugging and clone management operations.
     /// </summary>
     public int CloneIndex => cloneIndex;
-    
+
     /// <summary>
     /// The Goal object where this clone is stuck, if any.
     /// Null if the clone is not stuck.
     /// </summary>
     public Goal StuckAtGoal => stuckAtGoal;
-    
+
     /// <summary>
     /// Current progress through the action sequence (0.0 to 1.0).
     /// Useful for UI indicators or debugging replay timing.
     /// </summary>
     public float ReplayProgress => replayDuration > 0 ? (Time.time - replayStartTime) / replayDuration : 0f;
-    
+
     /// <summary>
     /// Cleanup logging when clone is destroyed.
     /// Called automatically when GameObject is destroyed.

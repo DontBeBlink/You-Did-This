@@ -17,6 +17,8 @@ public class LogicGateTrigger : TriggerObject {
     [Tooltip("The second input trigger")]
     public TriggerObject inputC;
 
+    private bool latched = false;
+
     /// <summary>
     /// Returns the result of running the inputs through the logic gate
     /// </summary>
@@ -25,30 +27,58 @@ public class LogicGateTrigger : TriggerObject {
     {
         get
         {
+            bool result = false;
             if (!inputA || (!inputB && type != LogicGateType.Not))
-                return false;
-            switch (type)
+                result = false;
+            else
             {
-                case LogicGateType.Not:
-                    return !inputA.Active;
-                case LogicGateType.And:
-                    return inputA.Active && inputB.Active;
-                case LogicGateType.Or:
-                    return inputA.Active || inputB.Active;
-                case LogicGateType.Xor:
-                    return inputA.Active != inputB.Active;
-                case LogicGateType.Nand:
-                    return !(inputA.Active && inputB.Active);
-                case LogicGateType.Nor:
-                    return !(inputA.Active || inputB.Active);
-                case LogicGateType.And3:
-                    return inputA.Active && inputB.Active && inputC.Active;
-                case LogicGateType.Or3:
-                    return inputA.Active || inputB.Active || inputC.Active;
-                case LogicGateType.Xor3:
-                    return (inputA.Active && !inputB.Active && !inputC.Active) || (!inputA.Active && inputB.Active && !inputC.Active) || (!inputA.Active && !inputB.Active && inputC.Active);
-                default:
-                    return false;
+                switch (type)
+                {
+                    case LogicGateType.Is:
+                        result = inputA.Active;
+                        break;
+                    case LogicGateType.Not:
+                        result = !inputA.Active;
+                        break;
+                    case LogicGateType.And:
+                        result = inputA.Active && inputB.Active;
+                        break;
+                    case LogicGateType.Or:
+                        result = inputA.Active || inputB.Active;
+                        break;
+                    case LogicGateType.Xor:
+                        result = inputA.Active != inputB.Active;
+                        break;
+                    case LogicGateType.Nand:
+                        result = !(inputA.Active && inputB.Active);
+                        break;
+                    case LogicGateType.Nor:
+                        result = !(inputA.Active || inputB.Active);
+                        break;
+                    case LogicGateType.And3:
+                        result = inputA.Active && inputB.Active && inputC.Active;
+                        break;
+                    case LogicGateType.Or3:
+                        result = inputA.Active || inputB.Active || inputC.Active;
+                        break;
+                    case LogicGateType.Xor3:
+                        result = (inputA.Active && !inputB.Active && !inputC.Active) || (!inputA.Active && inputB.Active && !inputC.Active) || (!inputA.Active && !inputB.Active && inputC.Active);
+                        break;
+                    default:
+                        result = false;
+                        break;
+                }
+            }
+
+            if (oneShot)
+            {
+                if (result)
+                    latched = true;
+                return latched;
+            }
+            else
+            {
+                return result;
             }
         }
     }
@@ -64,7 +94,8 @@ public class LogicGateTrigger : TriggerObject {
     /// <summary>
     /// Types of logic gates
     /// </summary>
-    public enum LogicGateType { // add new types for 3+ inputs
+    public enum LogicGateType { 
+        Is,
         Not,
         And,
         Or,

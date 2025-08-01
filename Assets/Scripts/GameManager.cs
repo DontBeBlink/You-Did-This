@@ -43,7 +43,7 @@ public class GameManager : MonoBehaviour
     
     // Game state tracking
     private bool isPaused = false;      // Current pause state
-    private bool showDebug = false;     // Whether debug overlay is currently visible
+    private bool showDebug = true;     // Whether debug overlay is currently visible
     
     // Scene component references (found dynamically in each scene)
     private CloneManager cloneManager;  // For clone system debug information
@@ -53,6 +53,10 @@ public class GameManager : MonoBehaviour
     private static GameManager instance;
     public static GameManager Instance => instance;
     
+    private string levelCompleteMessage = null;
+    private float levelCompleteMessageTime = 0f;
+    private const float levelCompleteDisplayDuration = 600f;
+
     /// <summary>
     /// Initialize singleton pattern and ensure persistence across scene loads.
     /// Implements singleton pattern with DontDestroyOnLoad for global game management.
@@ -122,6 +126,23 @@ public class GameManager : MonoBehaviour
         {
             showDebug = !showDebug;
         }
+
+        // Always allow restart, previous, and quit
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            HideLevelCompleteMessage();
+            RestartLevel();
+        }
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            HideLevelCompleteMessage();
+            GoToPreviousLevel(); // You need to implement this method if not present
+        }
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            HideLevelCompleteMessage();
+            Application.Quit();
+        }
     }
     
     /// <summary>
@@ -178,7 +199,7 @@ public class GameManager : MonoBehaviour
     private void OnGUI()
     {
         if (!showDebugInfo || !showDebug) return;
-        
+
         // Create debug information panel in top-left corner
         GUILayout.BeginArea(new Rect(10, 10, 300, 200));
         GUILayout.Label("=== DEBUG INFO ===");
@@ -213,10 +234,70 @@ public class GameManager : MonoBehaviour
         GUILayout.Label($"{debugKey}: Toggle Debug");
         
         GUILayout.EndArea();
+
+        // --- LEVEL COMPLETE MESSAGE ---
+        if (!string.IsNullOrEmpty(levelCompleteMessage) &&
+            Time.unscaledTime - levelCompleteMessageTime < levelCompleteDisplayDuration)
+        {
+            // Pause the game while showing the level complete message
+            if (!isPaused) PauseGame();
+
+            var style = new GUIStyle(GUI.skin.label);
+            style.fontSize = 48; // Smaller font size
+            style.alignment = TextAnchor.MiddleCenter;
+            style.normal.textColor = Color.green;
+
+            var subStyle = new GUIStyle(GUI.skin.label);
+            subStyle.fontSize = 24; // Smaller font size
+            subStyle.alignment = TextAnchor.MiddleCenter;
+            subStyle.normal.textColor = Color.yellowNice;
+
+            // Make the area smaller and more centered
+            float boxWidth = 700;
+            float boxHeight = 180;
+            float subBoxHeight = 80;
+            float centerX = (Screen.width - boxWidth) / 2;
+            float centerY = (Screen.height - boxHeight - subBoxHeight) / 2;
+
+            GUI.Label(
+                new Rect(centerX, centerY, boxWidth, boxHeight),
+                levelCompleteMessage,
+                style
+            );
+
+            // Show restart/previous/quit instructions
+            string subMsg = $"Press R to Restart Level\nPress B to Go Back (Previous Level)\nPress Esc to Quit";
+            GUI.Label(
+                new Rect(centerX, centerY + boxHeight, boxWidth, subBoxHeight),
+                subMsg,
+                subStyle
+            );
+        }
     }
     
     /// <summary>
     /// Whether the game is currently paused (time scale = 0).
     /// </summary>
     public bool IsPaused => isPaused;
+
+    // Add this public method so PuzzleLevel can call it
+    public void ShowLevelCompleteMessage(string message)
+    {
+        levelCompleteMessage = message;
+        levelCompleteMessageTime = Time.unscaledTime;
+    }
+
+    // Add this helper method:
+    private void HideLevelCompleteMessage()
+    {
+        levelCompleteMessage = null;
+        levelCompleteMessageTime = 0f;
+    }
+
+    // Example stub for previous level logic:
+    private void GoToPreviousLevel()
+    {
+        // for now just go to scene "Room2"
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Room2");
+    }
 }

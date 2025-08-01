@@ -26,12 +26,13 @@ using UnityEngine.InputSystem;
 /// Usage: Automatically found and configured by CloneManager. Should be present
 /// on the main player GameObject with CharacterController2D and CheckpointSystem.
 /// </summary>
-public class PlayerController : MonoBehaviour {
+public class PlayerController : MonoBehaviour
+{
 
     [Header("Respawn Settings")]
     public float softRespawnDelay = 0.5f;      // Delay before respawn sequence starts
     public float softRespawnDuration = 0.5f;   // Duration of respawn fade effect
-    
+
     [Header("Input System")]
     public InputMaster controls;                // Generated Input Actions from Input System
 
@@ -41,7 +42,7 @@ public class PlayerController : MonoBehaviour {
     private CheckpointSystem checkpoint;       // Handles save/load and respawn points
     private InteractSystem interact;           // Manages object pickup and interaction
     private ActionRecorder actionRecorder;     // Records actions for clone system
-    
+
     // Input state tracking
     private Vector2 axis;                      // Current movement input (-1 to 1 for x/y)
     private bool jumpHeld;                     // Whether jump button is currently held
@@ -51,19 +52,21 @@ public class PlayerController : MonoBehaviour {
     /// Connects all input actions to their corresponding methods and validates
     /// that required components are present in the scene.
     /// </summary>
-    void Awake() {
+    void Awake()
+    {
         // Get required components from this GameObject
         character = GetComponent<CharacterController2D>();
         checkpoint = GetComponent<CheckpointSystem>();
         interact = GetComponent<InteractSystem>();
         actionRecorder = GetComponent<ActionRecorder>();
-        
+
         // Find camera controller in scene (required for respawn effects)
         cameraController = GameObject.FindFirstObjectByType<CameraController>();
-        if (!cameraController) {
+        if (!cameraController)
+        {
             Debug.LogError("The scene is missing a camera controller! The player script needs it to work properly!");
         }
-        
+
         // Initialize Input System and bind input actions to methods
         controls = new InputMaster();
         controls.Player.Movement.performed += ctx => Move(ctx.ReadValue<Vector2>());
@@ -85,10 +88,10 @@ public class PlayerController : MonoBehaviour {
         // Update action recorder BEFORE applying movement for accurate clone recording
         if (actionRecorder != null)
         {
-            //actionRecorder.CurrentMovement = axis.x;  // Movement is set in Move() method
+           // actionRecorder.CurrentMovement = axis.x;  // Movement is set in Move() method
             actionRecorder.JumpHeld = jumpHeld;         // Track jump hold state for variable jump height
         }
-        
+
         // Apply movement to character controller
         character.Walk(axis.x);        // Horizontal movement (-1 to 1)
         character.ClimbLadder(axis.y); // Vertical movement for ladders (-1 to 1)
@@ -100,9 +103,10 @@ public class PlayerController : MonoBehaviour {
     /// Called when movement input is performed or canceled.
     /// </summary>
     /// <param name="_axis">Movement vector from input (-1 to 1 for x/y axes)</param>
-    private void Move(Vector2 _axis) {
+    private void Move(Vector2 _axis)
+    {
         axis = _axis;
-        
+
         // Immediately update ActionRecorder with movement for frame-perfect recording
         if (actionRecorder != null)
         {
@@ -116,11 +120,15 @@ public class PlayerController : MonoBehaviour {
     /// Updates ActionRecorder state for clone system reproduction.
     /// </summary>
     /// <param name="context">Input action context from Input System</param>
-    private void Jump(InputAction.CallbackContext context) {
-        if (axis.y < 0) {
+    private void Jump(InputAction.CallbackContext context)
+    {
+        if (axis.y < 0)
+        {
             // Down + Jump = Drop through one-way platforms
             character.JumpDown();
-        } else {
+        }
+        else
+        {
             // Regular jump
             character.Jump();
         }
@@ -133,7 +141,8 @@ public class PlayerController : MonoBehaviour {
     /// Shorter button presses result in lower jumps for precise platforming.
     /// </summary>
     /// <param name="context">Input action context from Input System</param>
-    private void EndJump(InputAction.CallbackContext context) {
+    private void EndJump(InputAction.CallbackContext context)
+    {
         character.EndJump();
         jumpHeld = false;
     }
@@ -143,7 +152,8 @@ public class PlayerController : MonoBehaviour {
     /// Dashes in the direction of current movement input.
     /// </summary>
     /// <param name="context">Input action context from Input System</param>
-    private void Dash(InputAction.CallbackContext context) {
+    private void Dash(InputAction.CallbackContext context)
+    {
         character.Dash(axis);
         // Note: JustDashed flag is automatically set by CharacterController2D.Dash() method
     }
@@ -153,8 +163,10 @@ public class PlayerController : MonoBehaviour {
     /// Used for picking up objects, activating switches, and other environmental interactions.
     /// </summary>
     /// <param name="context">Input action context from Input System</param>
-    private void Interact(InputAction.CallbackContext context) {
-        if (interact) {
+    private void Interact(InputAction.CallbackContext context)
+    {
+        if (interact)
+        {
             interact.Interact();
             // Note: JustInteracted flag is automatically set by InteractSystem.Interact() method
         }
@@ -165,8 +177,10 @@ public class PlayerController : MonoBehaviour {
     /// Throws currently picked up objects, if any. No effect if not holding an object.
     /// </summary>
     /// <param name="context">Input action context from Input System</param>
-    private void Attack(InputAction.CallbackContext context) {
-        if (interact && interact.PickedUpObject) {
+    private void Attack(InputAction.CallbackContext context)
+    {
+        if (interact && interact.PickedUpObject)
+        {
             interact.Throw();
             // Note: JustAttacked flag is automatically set by InteractSystem.Throw() method
         }
@@ -177,7 +191,8 @@ public class PlayerController : MonoBehaviour {
     /// This respawn preserves player stats and progress while repositioning them.
     /// Uses a fade effect to smooth the transition.
     /// </summary>
-    public void SoftRespawn() {
+    public void SoftRespawn()
+    {
         character.Immobile = true; // Prevent movement during respawn sequence
         Invoke("StartSoftRespawn", softRespawnDelay);
     }
@@ -186,7 +201,8 @@ public class PlayerController : MonoBehaviour {
     /// Begin the visual fade-out effect for soft respawn.
     /// Called after the soft respawn delay to start the transition sequence.
     /// </summary>
-    private void StartSoftRespawn() {
+    private void StartSoftRespawn()
+    {
         cameraController.FadeOut();
         Invoke("EndSoftRespawn", softRespawnDuration);
     }
@@ -195,7 +211,8 @@ public class PlayerController : MonoBehaviour {
     /// Complete the soft respawn by repositioning the player and fading back in.
     /// Restores player mobility and completes the respawn sequence.
     /// </summary>
-    private void EndSoftRespawn() {
+    private void EndSoftRespawn()
+    {
         checkpoint.ReturnToSoftCheckpoint(); // Move player to checkpoint position
         cameraController.FadeIn();          // Fade camera back in
         character.Immobile = false;         // Restore player movement
@@ -205,8 +222,10 @@ public class PlayerController : MonoBehaviour {
     /// Enable input processing when the component becomes active.
     /// Called automatically by Unity when the GameObject is enabled.
     /// </summary>
-    void OnEnable() {
+    void OnEnable()
+    {
         controls.Player.Enable();
+        CloneManager.OnLoopStarted += HandleLoopResetDetachPickup;
     }
 
     /// <summary>
@@ -214,7 +233,19 @@ public class PlayerController : MonoBehaviour {
     /// Called automatically by Unity when the GameObject is disabled.
     /// Prevents input processing for clones or when player is inactive.
     /// </summary>
-    void OnDisable() {
+    void OnDisable()
+    {
         controls.Player.Disable();
+        CloneManager.OnLoopStarted -= HandleLoopResetDetachPickup;
+    }
+    // Detach/throw picked up object on loop reset
+    private void HandleLoopResetDetachPickup()
+    {
+        if (interact != null && interact.PickedUpObject != null)
+        {
+            // Throw with zero force (just drop)
+            interact.PickedUpObject.Throw(Vector2.zero);
+            interact.PickedUpObject = null;
+        }
     }
 }

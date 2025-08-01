@@ -24,11 +24,14 @@ public struct PlayerAction
     public bool jumpHeld;          // Whether jump button is currently held
     public Vector2 speed;          // Current velocity vector
     public Vector2 externalForce;  // External forces applied (wind, pushers, etc.)
+    public bool isGrounded;        // Whether the character is grounded
+    public bool isOnWall;         // Whether the character is on a wall
+    public bool facingRight;       // Whether the character is facing right
 
     /// <summary>
     /// Create a new PlayerAction with all necessary state information.
     /// </summary>
-    public PlayerAction(float time, float move, bool jump, bool dash, Vector2 dashDir, bool interact, bool attack, Vector3 pos, bool jumpHeld, Vector2 speed, Vector2 externalForce)
+    public PlayerAction(float time, float move, bool jump, bool dash, Vector2 dashDir, bool interact, bool attack, Vector3 pos, bool jumpHeld, Vector2 speed, Vector2 externalForce, bool isGrounded = false, bool isOnWall = false, bool facingRight = false)
     {
         timestamp = time;
         movement = move;
@@ -41,6 +44,9 @@ public struct PlayerAction
         this.jumpHeld = jumpHeld;
         this.speed = speed;
         this.externalForce = externalForce;
+        this.isGrounded = isGrounded;
+        this.isOnWall = isOnWall;
+        this.facingRight = facingRight;
     }
 }
 
@@ -62,6 +68,22 @@ public struct PlayerAction
 /// </summary>
 public class ActionRecorder : MonoBehaviour
 {
+    // Pads the recorded actions so the last action is repeated until the specified duration
+    public void PadActionsToDuration(float targetDuration)
+    {
+        if (recordedActions.Count == 0) return;
+        PlayerAction last = recordedActions[recordedActions.Count - 1];
+        float lastTime = last.timestamp;
+        if (lastTime >= targetDuration - 0.0001f) return;
+        // Pad with last action, updating timestamp
+        while (lastTime < targetDuration - 0.0001f)
+        {
+            lastTime += recordingInterval;
+            PlayerAction padded = last;
+            padded.timestamp = lastTime;
+            recordedActions.Add(padded);
+        }
+    }
     [Header("Recording Settings")]
     [SerializeField] private float recordingInterval = 0.02f; // 50 FPS recording rate, matches FixedUpdate
     [SerializeField] private float maxRecordingTime = 30f; // Maximum recording duration to prevent memory issues
@@ -100,7 +122,29 @@ public class ActionRecorder : MonoBehaviour
         recordingStartTime = Time.time;
         lastRecordTime = Time.time;
         recordedActions.Clear(); // Clear previous recording data
-       // Debug.Log($"Started recording player actions at time {recordingStartTime:F2}");
+
+        var character = GetComponent<CharacterController2D>();
+        if (character != null)
+        {
+            PlayerAction initialAction = new PlayerAction(
+                0f,
+                CurrentMovement,
+                false, // isJumping
+                false, // isDashing
+                Vector2.zero, // dashDirection
+                false, // isInteracting
+                false, // isAttacking
+                character.transform.position,
+                JumpHeld,
+                character.GetType().GetField("speed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance) != null ? (Vector2)character.GetType().GetField("speed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(character) : Vector2.zero,
+                character.GetType().GetField("externalForce", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance) != null ? (Vector2)character.GetType().GetField("externalForce", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(character) : Vector2.zero,
+                character.Grounded,
+                character.OnWall,
+                character.FacingRight 
+            );
+            recordedActions.Add(initialAction);
+        }
+        // Debug.Log($"Started recording player actions at time {recordingStartTime:F2}");
     }
 
     /// <summary>
@@ -195,7 +239,10 @@ public class ActionRecorder : MonoBehaviour
             JumpHeld,                                 // Input: jump button currently held
             // Reflection access to private physics fields for complete state capture
             character.GetType().GetField("speed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance) != null ? (Vector2)character.GetType().GetField("speed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(character) : Vector2.zero,
-            character.GetType().GetField("externalForce", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance) != null ? (Vector2)character.GetType().GetField("externalForce", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(character) : Vector2.zero
+            character.GetType().GetField("externalForce", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance) != null ? (Vector2)character.GetType().GetField("externalForce", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(character) : Vector2.zero,
+            character.Grounded,                     // Physics: whether grounded
+            character.OnWall,                        // Physics: whether on wall
+            character.FacingRight                      // Physics: whether facing right
         );
         recordedActions.Add(action);
     }

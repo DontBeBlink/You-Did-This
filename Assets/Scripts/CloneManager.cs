@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework.Interfaces;
 using UnityEngine;
@@ -6,18 +7,6 @@ using UnityEngine.InputSystem;
 /// <summary>
 /// Central management system for the clone mechanics in "You Did This".
 /// Handles creation, lifecycle, and coordination of player clones that replay recorded actions.
-/// 
-/// Core Responsibilities:
-/// - Recording player actions through ActionRecorder integration
-/// - Creating and managing clone instances that replay recorded actions
-/// - Managing automatic and manual loop timing (default 15-second loops)
-/// - Handling clone limits and cleanup (max 10 clones by default)
-/// - Coordinating clone sticking at goals for puzzle completion
-/// - Providing events for other systems to respond to clone lifecycle changes
-/// 
-/// Usage: Place on any GameObject in the scene. Will automatically find and configure
-/// the PlayerController and ActionRecorder components. Clones are created either
-/// automatically every 15 seconds or manually with the L key.
 /// </summary>
 public class CloneManager : MonoBehaviour
 {
@@ -26,7 +15,9 @@ public class CloneManager : MonoBehaviour
     [SerializeField] private int maxClones = 10; // Maximum number of clones allowed simultaneously
     [SerializeField] private bool autoStartFirstLoop = true; // Whether to start recording automatically on scene start
     [SerializeField] private bool enableManualLooping = true; // Allow manual clone creation via input
-    [SerializeField] private Key manualLoopKey = Key.L; // Input key for manual clone creation
+    [SerializeField] private Key manualLoopKey = Key.F; // Input key for manual clone creation
+    [SerializeField] private bool IsMasterOfTime = false; // If true, player controls their own loop and position is not reset
+
 
     [Header("Clone Prefab")]
     [SerializeField] private GameObject clonePrefab; // Optional custom clone prefab (uses player copy if null)
@@ -38,12 +29,16 @@ public class CloneManager : MonoBehaviour
     private List<Clone> allClones = new List<Clone>(); // All active clones in creation order
     private PlayerController activePlayer; // Reference to the player being recorded
     private ActionRecorder actionRecorder; // Records player actions for clone replay
+    private CameraController cameraController;
     
     // Loop timing and state
     private float loopStartTime; // Time.time when current loop started
     private bool isLoopActive = false; // Whether we're currently recording a loop
     private int nextCloneIndex = 0; // Unique identifier for the next clone to be created
-    
+
+    private bool isTransitioning = false;
+    private bool isAutoLooping = false; // Add this field to prevent multiple auto loops
+
     // Events for other systems to respond to clone lifecycle changes
     public System.Action<Clone> OnCloneCreated; // Fired when a new clone is created
     public System.Action<Clone> OnCloneStuck; // Fired when a clone becomes stuck at a goal
@@ -71,6 +66,9 @@ public class CloneManager : MonoBehaviour
         // Find the player controller in the scene
         activePlayer = FindFirstObjectByType<PlayerController>();
 
+        // Find the camera controller for future use
+        cameraController = FindFirstObjectByType<CameraController>();
+
         if (activePlayer == null)
         {
             Debug.LogError("CloneManager: No PlayerController found in scene!");
@@ -85,10 +83,7 @@ public class CloneManager : MonoBehaviour
         if (actionRecorder == null)
         {
             actionRecorder = activePlayer.gameObject.AddComponent<ActionRecorder>();
-            //Debug.Log("CloneManager: Added ActionRecorder component to player");
         }
-        
-       // Debug.Log($"CloneManager: Setup complete. Manual loop key: {manualLoopKey}, Auto start: {autoStartFirstLoop}");
     }
     
     /// <summary>
@@ -109,27 +104,95 @@ public class CloneManager : MonoBehaviour
     /// </summary>
     private void Update()
     {
-        // Handle manual loop triggering with debug output using new Input System
-        if (enableManualLooping && Keyboard.current != null && Keyboard.current[manualLoopKey].wasPressedThisFrame)
+        if (IsMasterOfTime)
         {
-            Debug.Log($"Manual loop key ({manualLoopKey}) pressed! Clone count: {allClones.Count}, Max: {maxClones}");
-            if (allClones.Count < maxClones)
+            // Master of Time: F starts/stops recording and creates a clone with no padding or fade
+            if (Keyboard.current[manualLoopKey].wasPressedThisFrame)
             {
-                CreateClone();
-                StartNewLoop();
-                Debug.Log("Manual loop triggered successfully!");
-            }
-            else
-            {
-                Debug.LogWarning("Cannot create manual loop: Maximum clone limit reached!");
+                if (!actionRecorder.IsRecording)
+                {
+                    // Start recording
+                    actionRecorder.StartRecording();
+                    isLoopActive = true;
+                    loopStartTime = Time.time;
+                    OnNewLoopStarted?.Invoke();
+                    OnLoopStarted?.Invoke();
+                }
+                else
+                {
+                    // Stop recording and create clone (no padding, no fade, no position reset)
+                    actionRecorder.StopRecording();
+                    CreateClone();
+                    isLoopActive = false;
+                    OnLoopEnded?.Invoke();
+                }
+                return;
             }
         }
-
-        // Check if automatic loop duration has been reached
-        if (isLoopActive && Time.time - loopStartTime >= loopDuration)
+        else
         {
-            CreateClone();
-            StartNewLoop();
+            // Normal manual loop (L key)
+            if (enableManualLooping && Keyboard.current[manualLoopKey].wasPressedThisFrame)
+            {
+                StartCoroutine(ManualLoopCoroutine());
+                return;
+            }
+
+            // Automatic loop (guard against multiple triggers)
+            if (isLoopActive && !isAutoLooping && Time.time - loopStartTime >= loopDuration)
+            {
+                StartCoroutine(AutomaticLoopCoroutine());
+            }
+        }
+    }
+
+    private IEnumerator ManualLoopCoroutine()
+    {
+        // Fade out and disable input before ending loop
+        yield return StartCoroutine(LoopTransitionCoroutine(false));
+
+        actionRecorder.StopRecording();
+        actionRecorder.PadActionsToDuration(loopDuration);
+        CreateClone();
+        StartNewLoop(); // Start a new loop immediately
+
+        // Reset all clones' replay to the start of their action list
+        foreach (var clone in allClones)
+        {
+            if (clone != null && !clone.IsStuck)
+                clone.StartReplay();
+        }
+    }
+
+    private IEnumerator AutomaticLoopCoroutine()
+    {
+        isAutoLooping = true; // Set guard
+
+        // Fade out and disable input before ending loop
+        yield return StartCoroutine(LoopTransitionCoroutine(false));
+
+        CreateClone();
+        StartNewLoop();
+
+        isAutoLooping = false; // Release guard
+    }
+
+    // Master of Time coroutine: player triggers their own loop, position is NOT reset
+    private IEnumerator MasterOfTimeLoopCoroutine()
+    {
+        // Fade out and disable input before ending loop
+        yield return StartCoroutine(LoopTransitionCoroutine(false));
+
+        actionRecorder.StopRecording();
+        actionRecorder.PadActionsToDuration(loopDuration);
+        CreateClone();
+        StartNewLoop_MasterOfTime(); // Custom loop start for Master of Time
+
+        // Reset all clones' replay to the start of their action list
+        foreach (var clone in allClones)
+        {
+            if (clone != null && !clone.IsStuck)
+                clone.StartReplay();
         }
     }
     
@@ -164,6 +227,41 @@ public class CloneManager : MonoBehaviour
         // Notify other systems that a new loop has started
         OnNewLoopStarted?.Invoke();
         OnLoopStarted?.Invoke();
+
+        // Fade in and enable input after starting new loop
+        StartLoopTransition(true);
+    }
+
+    // Custom StartNewLoop for Master of Time (does NOT reset player position)
+    private void StartNewLoop_MasterOfTime()
+    {
+        if (actionRecorder == null) return;
+
+        // End previous loop if one was active
+        if (isLoopActive)
+        {
+            OnLoopEnded?.Invoke();
+        }
+
+        // Stop recording current actions to prepare for clone creation
+        if (actionRecorder.IsRecording)
+        {
+            actionRecorder.StopRecording();
+        }
+
+        // Begin new loop state
+        isLoopActive = true;
+        loopStartTime = Time.time;
+
+        // Start recording new actions for the next potential clone
+        actionRecorder.StartRecording();
+
+        // Notify other systems that a new loop has started
+        OnNewLoopStarted?.Invoke();
+        OnLoopStarted?.Invoke();
+
+        // Fade in and enable input after starting new loop
+        StartLoopTransition(true);
     }
     
     /// <summary>
@@ -193,7 +291,6 @@ public class CloneManager : MonoBehaviour
                 Destroy(allClones[0].gameObject);
             }
             allClones.RemoveAt(0);
-            //Debug.Log($"Clone limit reached. Oldest clone destroyed to make room for new one.");
         }
 
         GameObject cloneObject;
@@ -225,18 +322,12 @@ public class CloneManager : MonoBehaviour
         allClones.Add(clone);
         clone.StartReplay();
         
-        // Play audio feedback for clone creation
-        if (cloneCreateSound != null && AudioManager.Instance != null)
-        {
-            AudioManager.Instance.PlaySound(cloneCreateSound);
-        }
-        
-        // Reset player position to spawn point for next loop
-        activePlayer.transform.position = this.transform.position;
+        // Only reset player position if NOT Master of Time
+        if (!IsMasterOfTime)
+            activePlayer.transform.position = this.transform.position;
 
         // Notify other systems that a new clone was created
         OnCloneCreated?.Invoke(clone);
-        //Debug.Log($"Created clone {clone.CloneIndex} with {recordedActions.Count} actions");
     }
     
     /// <summary>
@@ -427,6 +518,51 @@ public class CloneManager : MonoBehaviour
     /// Whether a recording loop is currently active.
     /// </summary>
     public bool IsLoopActive => isLoopActive;
+
+    public void StartLoopTransition(bool isLoopStart)
+    {
+        if (!isTransitioning)
+            StartCoroutine(LoopTransitionCoroutine(isLoopStart));
+    }
+
+    private IEnumerator LoopTransitionCoroutine(bool isLoopStart)
+    {
+        isTransitioning = true;
+
+        // Disable player input
+        if (activePlayer != null)
+            activePlayer.enabled = false;
+
+        if (cameraController != null)
+        {
+            if (isLoopStart)
+            {
+                cameraController.FadeIn();
+                yield return new WaitForSeconds(cameraController.fadeInDuration);
+            }
+            else
+            {
+                // Play audio feedback for clone creation
+                if (cloneCreateSound != null && AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.PlaySound(cloneCreateSound);
+                }
+                cameraController.FadeOut();
+                yield return new WaitForSeconds(cameraController.fadeOutDuration);
+            }
+        }
+        else
+        {
+            // Fallback: short delay if no camera controller
+            yield return new WaitForSeconds(0.5f);
+        }
+
+        // Enable player input after fade in
+        if (isLoopStart && activePlayer != null)
+            activePlayer.enabled = true;
+
+        isTransitioning = false;
+    }
     
     /// <summary>
     /// Draw debug gizmos in the scene view to visualize loop progress.

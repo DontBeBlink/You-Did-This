@@ -31,7 +31,15 @@ public class TriggerObject : MonoBehaviour {
     /// Toggles the trigger between active and inactive
     /// </summary>
     public virtual void Trigger() {
-        if (!oneShot || !Active) {
+        if (oneShot) {
+            if (!Active) {
+                Active = true;
+                if (animator) {
+                    animator.SetBool(ANIMATION_ACTIVE, Active);
+                }
+            }
+            // If already active and oneShot, do nothing
+        } else {
             Active = !Active;
             if (animator) {
                 animator.SetBool(ANIMATION_ACTIVE, Active);
