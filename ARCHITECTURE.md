@@ -287,6 +287,91 @@ public System.Action OnNewLoopStarted;
 - **State Synchronization**: Events keep UI and game state aligned
 - **Extensibility**: New systems can easily hook into existing events
 
+## 🎨 Visual Effects System Architecture
+
+### Overview
+The visual effects system provides enhanced feedback for clone lifecycle and state changes through modular components that integrate seamlessly with the existing clone system.
+
+### Visual Effects Components
+
+#### GhostTrail.cs
+**Purpose**: Creates trail effects that follow clone movement using Unity's TrailRenderer.
+
+```csharp
+[RequireComponent(typeof(TrailRenderer))]
+public class GhostTrail : MonoBehaviour
+{
+    // State-based trail configuration
+    public void ConfigureForCloneState(CloneState state);
+    public void UpdateTrailColor(bool isStuck);
+}
+```
+
+**Key Features**:
+- Configurable trail properties (time, width, color)
+- State-based visual differentiation (active vs stuck)
+- Performance optimized for multiple concurrent clones
+
+#### CloneParticleEffects.cs
+**Purpose**: Manages particle systems for clone lifecycle events and ambient effects.
+
+```csharp
+public class CloneParticleEffects : MonoBehaviour
+{
+    // Event-based particle effects
+    public void PlaySpawnEffect();
+    public void PlayDespawnEffect();
+    public void PlayStuckEffect();
+    
+    // Continuous effects
+    public void StartAmbientEffects();
+}
+```
+
+#### CloneSoundEffects.cs
+**Purpose**: Provides spatial audio feedback for clone actions and state transitions.
+
+```csharp
+[RequireComponent(typeof(AudioSource))]
+public class CloneSoundEffects : MonoBehaviour
+{
+    // Lifecycle audio events
+    public void PlaySpawnSound();
+    public void PlayDespawnSound();
+    public void PlayStuckSound();
+}
+```
+
+### Integration Architecture
+
+#### Clone.cs Enhanced Structure
+```csharp
+public class Clone : MonoBehaviour
+{
+    [Header("Visual Effects")]
+    private bool enableGhostTrail;
+    private bool enableParticleEffects;
+    private bool enableSoundEffects;
+    
+    // Effect components automatically setup
+    private GhostTrail ghostTrail;
+    private CloneParticleEffects particleEffects;
+    private CloneSoundEffects soundEffects;
+    
+    private void SetupVisualEffects() 
+    {
+        // Automatic component initialization
+    }
+}
+```
+
+### Performance Optimizations
+
+- **State-Based Activation**: Effects only run when clones are active
+- **Particle Limits**: Maximum particle counts prevent performance issues
+- **Spatial Audio**: Distance-based audio culling for performance
+- **Memory Management**: Proper cleanup when clones are destroyed
+
 ## 🧩 Extension Points
 
 ### Adding New Mechanics

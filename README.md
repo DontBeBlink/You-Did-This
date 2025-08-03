@@ -34,6 +34,10 @@ Navigate through puzzle levels by strategically creating clones of yourself. Eac
 
 ### 🎨 Visual & Audio Design
 - Distinct visual feedback for active vs. stuck clones
+- **Ghost Trail Effects**: Visual trails that follow clone movement with state-based colors
+- **Particle Effects**: Spawn, despawn, and ambient particle systems for enhanced visual feedback
+- **Glow Effects**: Ambient lighting around active clones (URP 2D compatible)
+- **Enhanced Audio**: Sound effects for clone lifecycle events and actions
 - Color-coded goal system (yellow incomplete, green complete)
 - Audio cues for clone creation and goal completion
 - Debug visualization for development and testing
