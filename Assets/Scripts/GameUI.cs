@@ -12,6 +12,9 @@ public class GameUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI loopTimerText; // (Optional: keep for numeric display)
     [SerializeField] private Button retractButton;
     [SerializeField] private Button createCloneButton;
+    [Header("Overlay")]
+    [SerializeField] private Image recordingOverlay; // Assign in inspector: full screen UI Image
+    [SerializeField] private float overlayFadeSpeed = 3f; // Fade speed in seconds
 
     private CloneManager cloneManager;
 
@@ -60,13 +63,14 @@ public class GameUI : MonoBehaviour
         {
             if (cloneManager.IsLoopActive)
             {
+                loopTimerSlider.gameObject.SetActive(true);
                 float timeLeft = cloneManager.TimeUntilNextLoop;
                 loopTimerSlider.maxValue = cloneManager.LoopDuration;
                 loopTimerSlider.value = cloneManager.LoopDuration - timeLeft;
             }
             else
             {
-                loopTimerSlider.value = 0f;
+                loopTimerSlider.gameObject.SetActive(false);
             }
         }
         if (loopTimerText != null)
@@ -82,6 +86,15 @@ public class GameUI : MonoBehaviour
             }
         }
 
+        // Update recording overlay fade
+        if (recordingOverlay != null)
+        {
+            float targetAlpha = cloneManager.IsLoopActive ? 0.05f : 0f; // 0.05 = visible, 0 = hidden
+            Color c = recordingOverlay.color;
+            c.a = Mathf.MoveTowards(c.a, targetAlpha, overlayFadeSpeed * Time.deltaTime);
+            recordingOverlay.color = c;
+        }
+        /*
         // Update status
         if (statusText != null)
         {
@@ -111,7 +124,7 @@ public class GameUI : MonoBehaviour
             }
             retractButton.interactable = canRetract;
         }
-
+        */
         if (createCloneButton != null)
         {
             createCloneButton.interactable = cloneManager.TotalClones < 10; // Max clones

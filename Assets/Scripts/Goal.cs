@@ -73,14 +73,14 @@ public class Goal : MonoBehaviour
             // Check if this goal requires a specific clone by creation index
             if (requiresSpecificClone)
             {
-                var allClones = cloneManager.GetAllClones();
-                int cloneIndex = allClones.IndexOf(clone);
+                //var allClones = cloneManager.GetAllClones();
+                //int cloneIndex = allClones.IndexOf(clone);
 
-                if (cloneIndex != requiredCloneIndex)
-                {
-                    Debug.Log($"Wrong clone reached goal. Required: {requiredCloneIndex}, Got: {cloneIndex}");
-                    return; // Wrong clone, don't complete the goal
-                }
+               // if (cloneIndex != requiredCloneIndex)
+              //  {
+                   // Debug.Log($"Wrong clone reached goal. Required: {requiredCloneIndex}, Got: {cloneIndex}");
+                   // return; // Wrong clone, don't complete the goal
+               // }
             }
 
             CompleteGoal(clone);
