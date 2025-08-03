@@ -261,6 +261,8 @@ public class CloneManager : MonoBehaviour
 
     /// <summary>
     /// Initialize camera settings for zoom effects.
+    /// Note: originalOrthoSize/originalFOV will be updated dynamically before each zoom
+    /// to capture the current camera state (which may have been modified by other scripts).
     /// </summary>
     private void InitializeCameraSettings()
     {
@@ -369,13 +371,17 @@ public class CloneManager : MonoBehaviour
             StopCoroutine(cameraZoomCoroutine);
         }
 
+        // Capture current camera values before zooming (in case other scripts changed them)
+        originalOrthoSize = cineCamera.Lens.OrthographicSize;
+        originalFOV = cineCamera.Lens.FieldOfView;
+
         // Start zoom-in effect
         float targetOrthoSize = Mathf.Max(0.1f, originalOrthoSize + zoomInAmount);
         float targetFOV = Mathf.Max(1f, originalFOV + zoomInAmount * 10f);
         
         cameraZoomCoroutine = StartCoroutine(SmoothCameraZoom(
-            cineCamera.Lens.OrthographicSize, targetOrthoSize,
-            cineCamera.Lens.FieldOfView, targetFOV,
+            originalOrthoSize, targetOrthoSize,
+            originalFOV, targetFOV,
             zoomDuration
         ));
     }
