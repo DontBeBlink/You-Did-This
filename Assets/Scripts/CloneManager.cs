@@ -185,8 +185,18 @@ public class CloneManager : MonoBehaviour
         OnNewLoopStarted?.Invoke();
         OnLoopStarted?.Invoke();
 
-        // Start recording after transition
+    // For Master of Time mode, start recording immediately AND play transition
+    if (masterOfTimeMode && actionRecorder != null)
+    {
+        actionRecorder.StartRecording();
+        // Still play transition but don't wait for it to complete
+        StartCoroutine(PlayTransitionEffects(true));
+    }
+    else
+    {
+        // Normal mode: Start recording after transition
         StartCoroutine(BeginRecordingAfterTransition());
+    }
     }
 
     /// <summary>
@@ -242,7 +252,7 @@ public class CloneManager : MonoBehaviour
         if (actionRecorder != null)
         {
             actionRecorder.StopRecording();
-            actionRecorder.PadActionsToDuration(loopDuration);
+            if (!masterOfTimeMode)  actionRecorder.PadActionsToDuration(loopDuration);
         }
 
         CreateClone();
