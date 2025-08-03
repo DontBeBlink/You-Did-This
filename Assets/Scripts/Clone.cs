@@ -14,11 +14,23 @@ public class Clone : MonoBehaviour
     [SerializeField] private Color cloneColor = Color.cyan;    // Base color for active clones
     [SerializeField] private float cloneAlpha = 0.4f;          // Transparency level to distinguish from player
 
+    [Header("Visual Effects")]
+    [SerializeField] private bool enableGhostTrail = true;     // Enable ghost trail effect
+    [SerializeField] private bool enableParticleEffects = true; // Enable particle effects
+    [SerializeField] private bool enableGlowEffect = true;     // Enable glow effect around clone
+    [SerializeField] private bool enableSoundEffects = true;   // Enable sound effects for clone actions
+
     // Core components required for action replay
     private List<PlayerAction> actionsToReplay;   // Sequence of actions to reproduce
     private CharacterController2D character;      // Physics and movement controller
     private InteractSystem interact;              // Object interaction system
     private SpriteRenderer spriteRenderer;        // Visual rendering component
+    
+    // Visual effects components
+    private GhostTrail ghostTrail;                // Trail effect component
+    private CloneParticleEffects particleEffects; // Particle effects component
+    private CloneSoundEffects soundEffects;       // Sound effects component
+    private Component glowLight;                  // 2D light for glow effect (if available)
 
     // Replay state management
     private bool isReplaying = false;            // Whether currently playing back actions
@@ -47,6 +59,7 @@ public class Clone : MonoBehaviour
         spriteRenderer = GetComponent<SpriteRenderer>();
 
         SetupCloneVisuals();
+        SetupVisualEffects();
     }
 
     /// <summary>
@@ -71,6 +84,102 @@ public class Clone : MonoBehaviour
 
         // Name the GameObject for easier debugging and scene hierarchy viewing
         gameObject.name = $"Clone_{cloneIndex}";
+    }
+    
+    /// <summary>
+    /// Set up visual effects components for enhanced clone appearance.
+    /// </summary>
+    private void SetupVisualEffects()
+    {
+        // Set up ghost trail effect
+        if (enableGhostTrail)
+        {
+            ghostTrail = GetComponent<GhostTrail>();
+            if (ghostTrail == null)
+            {
+                // Add TrailRenderer component first
+                TrailRenderer trailRenderer = gameObject.AddComponent<TrailRenderer>();
+                // Then add our GhostTrail component
+                ghostTrail = gameObject.AddComponent<GhostTrail>();
+            }
+        }
+        
+        // Set up particle effects
+        if (enableParticleEffects)
+        {
+            particleEffects = GetComponent<CloneParticleEffects>();
+            if (particleEffects == null)
+            {
+                particleEffects = gameObject.AddComponent<CloneParticleEffects>();
+            }
+        }
+        
+        // Set up sound effects
+        if (enableSoundEffects)
+        {
+            soundEffects = GetComponent<CloneSoundEffects>();
+            if (soundEffects == null)
+            {
+                // Add AudioSource component first if not present
+                AudioSource audioSource = GetComponent<AudioSource>();
+                if (audioSource == null)
+                {
+                    audioSource = gameObject.AddComponent<AudioSource>();
+                }
+                // Then add our CloneSoundEffects component
+                soundEffects = gameObject.AddComponent<CloneSoundEffects>();
+            }
+        }
+        
+        // Set up glow effect using 2D light (if Universal Render Pipeline 2D is available)
+        if (enableGlowEffect)
+        {
+            SetupGlowEffect();
+        }
+    }
+    
+    /// <summary>
+    /// Set up glow effect around the clone.
+    /// </summary>
+    private void SetupGlowEffect()
+    {
+        // Try to use UnityEngine.Rendering.Universal.Light2D if available
+        // This will work if the project uses URP 2D renderer
+        try
+        {
+            var light2DType = System.Type.GetType("UnityEngine.Rendering.Universal.Light2D, Unity.RenderPipelines.Universal.Runtime");
+            if (light2DType != null)
+            {
+                var light2DComponent = gameObject.GetComponent(light2DType);
+                if (light2DComponent == null)
+                {
+                    light2DComponent = gameObject.AddComponent(light2DType);
+                    
+                    // Configure the 2D light using reflection
+                    var colorProperty = light2DType.GetProperty("color");
+                    var intensityProperty = light2DType.GetProperty("intensity");
+                    var innerRadiusProperty = light2DType.GetProperty("pointLightInnerRadius");
+                    var outerRadiusProperty = light2DType.GetProperty("pointLightOuterRadius");
+                    
+                    if (colorProperty != null) colorProperty.SetValue(light2DComponent, cloneColor);
+                    if (intensityProperty != null) intensityProperty.SetValue(light2DComponent, 0.3f);
+                    if (innerRadiusProperty != null) innerRadiusProperty.SetValue(light2DComponent, 0.1f);
+                    if (outerRadiusProperty != null) outerRadiusProperty.SetValue(light2DComponent, 0.5f);
+                }
+            }
+        }
+        catch (System.Exception)
+        {
+            // If 2D lighting is not available, fall back to sprite glow material
+            if (spriteRenderer != null && spriteRenderer.material.name.Contains("Default"))
+            {
+                Material glowMaterial = Resources.Load<Material>("Materials/Sprite Glow");
+                if (glowMaterial != null)
+                {
+                    spriteRenderer.material = glowMaterial;
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -158,6 +267,23 @@ public class Clone : MonoBehaviour
         replayStartTime = Time.time;
         currentActionIndex = 0;
         wasJumpHeld = false; // Reset jump held state for clean start
+        
+        // Trigger visual effects
+        if (particleEffects != null)
+        {
+            particleEffects.PlaySpawnEffect();
+            particleEffects.StartAmbientEffects();
+        }
+        
+        if (soundEffects != null)
+        {
+            soundEffects.PlaySpawnSound();
+        }
+        
+        if (ghostTrail != null)
+        {
+            ghostTrail.ConfigureForCloneState(CloneState.Active);
+        }
     }
 
     /// <summary>
@@ -322,6 +448,25 @@ public class Clone : MonoBehaviour
             stuckColor.a = cloneAlpha;
             spriteRenderer.color = stuckColor;
         }
+        
+        // Update visual effects for stuck state
+        if (particleEffects != null)
+        {
+            particleEffects.PlayStuckEffect();
+        }
+        
+        if (soundEffects != null)
+        {
+            soundEffects.PlayStuckSound();
+        }
+        
+        if (ghostTrail != null)
+        {
+            ghostTrail.ConfigureForCloneState(CloneState.Stuck);
+        }
+        
+        // Update glow effect color if available
+        UpdateGlowEffectColor(Color.green);
 
         Debug.Log($"Clone {cloneIndex} is now stuck at goal");
     }
@@ -333,7 +478,47 @@ public class Clone : MonoBehaviour
     public void StopReplay()
     {
         isReplaying = false;
+        
+        // Update visual effects for inactive state
+        if (particleEffects != null)
+        {
+            particleEffects.StopAmbientEffects();
+        }
+        
+        if (ghostTrail != null)
+        {
+            ghostTrail.ConfigureForCloneState(CloneState.Inactive);
+        }
+        
         Debug.Log($"Clone {cloneIndex} stopped replaying");
+    }
+    
+    /// <summary>
+    /// Update the glow effect color using reflection to access 2D lighting.
+    /// </summary>
+    /// <param name="newColor">The new color for the glow effect</param>
+    private void UpdateGlowEffectColor(Color newColor)
+    {
+        try
+        {
+            var light2DType = System.Type.GetType("UnityEngine.Rendering.Universal.Light2D, Unity.RenderPipelines.Universal.Runtime");
+            if (light2DType != null)
+            {
+                var light2DComponent = gameObject.GetComponent(light2DType);
+                if (light2DComponent != null)
+                {
+                    var colorProperty = light2DType.GetProperty("color");
+                    if (colorProperty != null)
+                    {
+                        colorProperty.SetValue(light2DComponent, newColor);
+                    }
+                }
+            }
+        }
+        catch (System.Exception)
+        {
+            // Ignore if 2D lighting is not available
+        }
     }
 
     // Properties for external access to clone state
@@ -374,6 +559,17 @@ public class Clone : MonoBehaviour
     /// </summary>
     private void OnDestroy()
     {
+        // Trigger despawn effects before destruction
+        if (particleEffects != null)
+        {
+            particleEffects.PlayDespawnEffect();
+        }
+        
+        if (soundEffects != null)
+        {
+            soundEffects.PlayDespawnSound();
+        }
+        
         //Debug.Log($"Clone {cloneIndex} destroyed");
     }
 }
