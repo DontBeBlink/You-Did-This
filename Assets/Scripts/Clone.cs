@@ -97,9 +97,7 @@ public class Clone : MonoBehaviour
             ghostTrail = GetComponent<GhostTrail>();
             if (ghostTrail == null)
             {
-                // Add TrailRenderer component first
-                TrailRenderer trailRenderer = gameObject.AddComponent<TrailRenderer>();
-                // Then add our GhostTrail component
+                // Add our GhostTrail component (no longer requires TrailRenderer)
                 ghostTrail = gameObject.AddComponent<GhostTrail>();
             }
         }

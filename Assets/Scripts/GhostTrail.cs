@@ -1,149 +1,209 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Creates a ghost trail effect for clones using Unity's TrailRenderer.
-/// This component adds a visual trail that follows clone movement,
-/// enhancing the visual feedback of clone actions and making it easier
-/// to track clone paths during puzzle solving.
+/// Creates a ghost trail effect for clones showing past action positions that dissipate over time.
+/// This component creates afterimage-style ghost sprites at positions where the clone performed actions,
+/// which then fade out over time to create a visual trail of the clone's past movements and actions.
 /// 
 /// Features:
-/// - Configurable trail color with alpha transparency
-/// - Different trail styles for active vs stuck clones
-/// - Automatic cleanup when clone is destroyed
+/// - Creates ghostly afterimages at past action positions
+/// - Afterimages fade out over time creating a dissipating trail effect
+/// - Different visual styles for active vs stuck clones
 /// - Performance optimized for multiple clones
+/// - Shows actual past positions rather than continuous trail
 /// </summary>
-[RequireComponent(typeof(TrailRenderer))]
 public class GhostTrail : MonoBehaviour
 {
-    [Header("Trail Settings")]
-    [SerializeField] private float trailTime = 0.5f;                 // How long trail persists
-    [SerializeField] private float trailWidth = 0.1f;               // Width of trail
-    [SerializeField] private Color activeTrailColor = Color.cyan;    // Color for active clones
-    [SerializeField] private Color stuckTrailColor = Color.green;    // Color for stuck clones
-    [SerializeField] private AnimationCurve trailWidthCurve = AnimationCurve.Linear(0, 1, 1, 0); // Width over lifetime
+    [Header("Ghost Trail Settings")]
+    [SerializeField] private float ghostLifetime = 2.0f;            // How long each ghost persists before fading
+    [SerializeField] private float spawnInterval = 0.2f;            // Time between ghost spawns
+    [SerializeField] private int maxGhosts = 10;                    // Maximum number of ghosts at once
+    [SerializeField] private Color activeGhostColor = Color.cyan;   // Color for active clone ghosts
+    [SerializeField] private Color stuckGhostColor = Color.green;   // Color for stuck clone ghosts
+    [SerializeField] private float ghostAlpha = 0.3f;              // Starting alpha for ghost sprites
     
     [Header("Performance")]
-    [SerializeField] private int trailVertexCount = 20;             // Number of trail points
-    [SerializeField] private float minVertexDistance = 0.1f;        // Minimum distance between points
+    [SerializeField] private float minMoveDistance = 0.5f;          // Minimum distance moved before spawning ghost
     
-    private TrailRenderer trailRenderer;
+    // Ghost tracking and management
+    private List<GhostAfterimage> activeGhosts = new List<GhostAfterimage>();
     private Clone parentClone;
+    private SpriteRenderer parentSpriteRenderer;
     private bool isInitialized = false;
+    private float lastGhostTime;
+    private Vector3 lastGhostPosition;
     
     /// <summary>
-    /// Initialize the trail renderer with default settings.
+    /// Individual ghost afterimage that fades over time
     /// </summary>
-    private void Awake()
+    private class GhostAfterimage
     {
-        trailRenderer = GetComponent<TrailRenderer>();
-        parentClone = GetComponent<Clone>();
+        public GameObject gameObject;
+        public SpriteRenderer spriteRenderer;
+        public float spawnTime;
+        public float lifetime;
+        public Color originalColor;
         
-        SetupTrailRenderer();
+        public bool IsExpired => Time.time - spawnTime >= lifetime;
+        
+        public void UpdateFade()
+        {
+            if (spriteRenderer == null) return;
+            
+            float age = Time.time - spawnTime;
+            float fadeProgress = age / lifetime;
+            Color color = originalColor;
+            color.a = originalColor.a * (1f - fadeProgress);
+            spriteRenderer.color = color;
+        }
     }
     
     /// <summary>
-    /// Configure the trail renderer with visual settings.
+    /// Initialize the ghost trail system.
     /// </summary>
-    private void SetupTrailRenderer()
+    private void Awake()
     {
-        if (trailRenderer == null) return;
+        parentClone = GetComponent<Clone>();
+        parentSpriteRenderer = GetComponent<SpriteRenderer>();
         
-        // Basic trail settings
-        trailRenderer.time = trailTime;
-        trailRenderer.startWidth = trailWidth;
-        trailRenderer.endWidth = 0f;
-        trailRenderer.widthCurve = trailWidthCurve;
-        trailRenderer.numCornerVertices = 5;
-        trailRenderer.numCapVertices = 5;
-        trailRenderer.minVertexDistance = minVertexDistance;
-        
-        // Material settings - use sprite glow material if available
-        Material trailMaterial = Resources.Load<Material>("Materials/Sprite Glow");
-        if (trailMaterial != null)
-        {
-            trailRenderer.material = trailMaterial;
-        }
-        
-        // Set initial color
-        UpdateTrailColor(false);
-        
-        // Performance settings
-        trailRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-        trailRenderer.receiveShadows = false;
-        
+        lastGhostPosition = transform.position;
+        lastGhostTime = Time.time;
         isInitialized = true;
     }
     
     /// <summary>
-    /// Update trail color based on clone state.
+    /// Create a ghost afterimage at the current position.
     /// </summary>
-    /// <param name="isStuck">Whether the clone is stuck at a goal</param>
-    public void UpdateTrailColor(bool isStuck)
+    private void SpawnGhost()
     {
-        if (trailRenderer == null) return;
+        if (parentSpriteRenderer == null) return;
         
-        Color trailColor = isStuck ? stuckTrailColor : activeTrailColor;
-        trailColor.a = 0.6f; // Set transparency
+        // Create ghost GameObject
+        GameObject ghostObject = new GameObject($"Ghost_{activeGhosts.Count}");
+        ghostObject.transform.position = transform.position;
+        ghostObject.transform.rotation = transform.rotation;
+        ghostObject.transform.localScale = transform.localScale;
         
-        // Create gradient from full color to transparent
-        Gradient gradient = new Gradient();
-        gradient.SetKeys(
-            new GradientColorKey[] { 
-                new GradientColorKey(trailColor, 0.0f), 
-                new GradientColorKey(trailColor, 1.0f) 
-            },
-            new GradientAlphaKey[] { 
-                new GradientAlphaKey(trailColor.a, 0.0f), 
-                new GradientAlphaKey(0.0f, 1.0f) 
-            }
-        );
+        // Copy sprite renderer
+        SpriteRenderer ghostRenderer = ghostObject.AddComponent<SpriteRenderer>();
+        ghostRenderer.sprite = parentSpriteRenderer.sprite;
+        ghostRenderer.sortingLayerName = parentSpriteRenderer.sortingLayerName;
+        ghostRenderer.sortingOrder = parentSpriteRenderer.sortingOrder - 1; // Render behind original
         
-        trailRenderer.colorGradient = gradient;
+        // Set ghost color based on clone state
+        Color ghostColor = parentClone != null && parentClone.IsStuck ? stuckGhostColor : activeGhostColor;
+        ghostColor.a = ghostAlpha;
+        ghostRenderer.color = ghostColor;
+        
+        // Create ghost data
+        GhostAfterimage ghost = new GhostAfterimage
+        {
+            gameObject = ghostObject,
+            spriteRenderer = ghostRenderer,
+            spawnTime = Time.time,
+            lifetime = ghostLifetime,
+            originalColor = ghostColor
+        };
+        
+        activeGhosts.Add(ghost);
+        
+        // Remove oldest ghost if we've exceeded max count
+        if (activeGhosts.Count > maxGhosts)
+        {
+            DestroyGhost(activeGhosts[0]);
+            activeGhosts.RemoveAt(0);
+        }
     }
     
     /// <summary>
-    /// Monitor clone state changes to update trail appearance.
+    /// Destroy a ghost afterimage.
+    /// </summary>
+    private void DestroyGhost(GhostAfterimage ghost)
+    {
+        if (ghost.gameObject != null)
+        {
+            DestroyImmediate(ghost.gameObject);
+        }
+    }
+    
+    /// <summary>
+    /// Update ghost trail system each frame.
     /// </summary>
     private void Update()
     {
         if (!isInitialized || parentClone == null) return;
         
-        // Update trail color based on clone state
-        UpdateTrailColor(parentClone.IsStuck);
+        // Only create ghosts if clone is replaying and not stuck
+        if (parentClone.IsReplaying && !parentClone.IsStuck)
+        {
+            // Check if enough time has passed and clone has moved enough to spawn a new ghost
+            float timeSinceLastGhost = Time.time - lastGhostTime;
+            float distanceMoved = Vector3.Distance(transform.position, lastGhostPosition);
+            
+            if (timeSinceLastGhost >= spawnInterval && distanceMoved >= minMoveDistance)
+            {
+                SpawnGhost();
+                lastGhostTime = Time.time;
+                lastGhostPosition = transform.position;
+            }
+        }
         
-        // Disable trail if clone is not moving or replaying
-        trailRenderer.enabled = parentClone.IsReplaying || parentClone.IsStuck;
+        // Update existing ghosts (fade them over time)
+        UpdateGhosts();
     }
     
     /// <summary>
-    /// Enable the trail effect.
+    /// Update all active ghost afterimages.
+    /// </summary>
+    private void UpdateGhosts()
+    {
+        for (int i = activeGhosts.Count - 1; i >= 0; i--)
+        {
+            GhostAfterimage ghost = activeGhosts[i];
+            
+            if (ghost.IsExpired || ghost.gameObject == null)
+            {
+                DestroyGhost(ghost);
+                activeGhosts.RemoveAt(i);
+            }
+            else
+            {
+                ghost.UpdateFade();
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Enable the ghost trail effect.
     /// </summary>
     public void EnableTrail()
     {
-        if (trailRenderer != null)
-            trailRenderer.enabled = true;
+        enabled = true;
     }
     
     /// <summary>
-    /// Disable the trail effect.
+    /// Disable the ghost trail effect.
     /// </summary>
     public void DisableTrail()
     {
-        if (trailRenderer != null)
-            trailRenderer.enabled = false;
+        enabled = false;
     }
     
     /// <summary>
-    /// Clear the current trail.
+    /// Clear all existing ghost afterimages.
     /// </summary>
     public void ClearTrail()
     {
-        if (trailRenderer != null)
-            trailRenderer.Clear();
+        for (int i = activeGhosts.Count - 1; i >= 0; i--)
+        {
+            DestroyGhost(activeGhosts[i]);
+        }
+        activeGhosts.Clear();
     }
     
     /// <summary>
-    /// Configure trail for specific clone state.
+    /// Configure ghost trail for specific clone state.
     /// </summary>
     /// <param name="cloneState">The state to configure trail for</param>
     public void ConfigureForCloneState(CloneState cloneState)
@@ -151,17 +211,25 @@ public class GhostTrail : MonoBehaviour
         switch (cloneState)
         {
             case CloneState.Active:
-                UpdateTrailColor(false);
                 EnableTrail();
                 break;
             case CloneState.Stuck:
-                UpdateTrailColor(true);
+                // Keep existing ghosts but stop creating new ones
                 EnableTrail();
                 break;
             case CloneState.Inactive:
                 DisableTrail();
+                ClearTrail();
                 break;
         }
+    }
+    
+    /// <summary>
+    /// Clean up all ghost afterimages when the component is destroyed.
+    /// </summary>
+    private void OnDestroy()
+    {
+        ClearTrail();
     }
 }
 

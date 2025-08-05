@@ -14,21 +14,23 @@ The ghost trail system enhances the visual feedback of the clone system by addin
 
 ### 1. GhostTrail Component
 
-**Purpose**: Creates a visual trail that follows clone movement using Unity's TrailRenderer.
+**Purpose**: Creates a visual trail showing past action positions that dissipate over time, providing a "trail of past actions" effect.
 
 **Key Features**:
-- Configurable trail color, width, and duration
-- Different visual states for active vs stuck clones
+- Creates afterimage-style ghost sprites at past positions
+- Ghosts fade out over time creating a dissipating trail effect  
+- Different visual styles for active vs stuck clones
 - Performance optimized for multiple clones
-- Automatic state management based on clone behavior
+- Shows actual past positions rather than continuous trail lines
 
 **Configuration**:
 ```csharp
-[Header("Trail Settings")]
-trailTime = 0.5f;                 // How long trail persists
-trailWidth = 0.1f;               // Width of trail
-activeTrailColor = Color.cyan;    // Color for active clones
-stuckTrailColor = Color.green;    // Color for stuck clones
+[Header("Ghost Trail Settings")]
+ghostLifetime = 2.0f;              // How long each ghost persists before fading
+spawnInterval = 0.2f;              // Time between ghost spawns
+maxGhosts = 10;                    // Maximum number of ghosts at once
+activeGhostColor = Color.cyan;     // Color for active clone ghosts
+stuckGhostColor = Color.green;     // Color for stuck clone ghosts
 ```
 
 ### 2. CloneParticleEffects Component
@@ -93,13 +95,13 @@ In the Clone component inspector, you can toggle:
 ## Visual States
 
 ### Active Clone
-- **Trail**: Cyan colored trail following movement
+- **Trail**: Cyan afterimage ghosts that appear at past positions and fade out over time
 - **Particles**: Ambient particles emanating from clone
 - **Glow**: Soft cyan glow around clone
 - **Sound**: Spawn sound when created
 
 ### Stuck Clone
-- **Trail**: Green colored trail (reduced opacity)
+- **Trail**: Green afterimage ghosts (reduced opacity, existing ghosts continue to fade)
 - **Particles**: Green burst effect when becoming stuck
 - **Glow**: Green glow indicating permanent state
 - **Sound**: Special stuck sound effect
@@ -112,12 +114,11 @@ In the Clone component inspector, you can toggle:
 
 ## Technical Implementation
 
-### TrailRenderer Integration
+### Afterimage Ghost System
 ```csharp
-// Ghost trail automatically configures TrailRenderer
-trailRenderer.time = trailTime;
-trailRenderer.startWidth = trailWidth;
-trailRenderer.material = glowMaterial; // Uses existing glow materials
+// Ghost trail creates fading afterimages at past positions
+SpawnGhost(); // Creates a new ghost sprite at current position
+ghost.UpdateFade(); // Fades ghost over time using alpha transparency
 ```
 
 ### Particle System Creation
@@ -143,8 +144,9 @@ var light2DType = System.Type.GetType("UnityEngine.Rendering.Universal.Light2D..
 
 ### Recommended Settings
 - **Max Clones**: Keep under 10 active clones for optimal performance
-- **Trail Time**: 0.5s provides good visual feedback without overhead
-- **Particle Count**: 20-30 particles per effect for good visual quality
+- **Ghost Lifetime**: 2.0s provides good visual feedback without clutter
+- **Spawn Interval**: 0.2s balances visual quality with performance
+- **Max Ghosts**: 10 ghosts per clone prevents memory issues
 
 ## Customization
 
@@ -158,11 +160,11 @@ Add custom audio clips to the CloneSoundEffects component:
 - `stuckSound`: Played when clone becomes stuck at goal
 
 ### Color Schemes
-Modify color settings in the Clone component to match your game's visual style:
+Modify color settings in the Clone component and GhostTrail component to match your game's visual style:
 ```csharp
-cloneColor = Color.cyan;        // Base clone color
-activeTrailColor = Color.cyan;  // Trail color for active clones
-stuckTrailColor = Color.green;  // Trail color for stuck clones
+cloneColor = Color.cyan;              // Base clone color
+activeGhostColor = Color.cyan;        // Ghost color for active clones
+stuckGhostColor = Color.green;        // Ghost color for stuck clones
 ```
 
 ## Troubleshooting
@@ -171,8 +173,9 @@ stuckTrailColor = Color.green;  // Trail color for stuck clones
 
 **Trails not appearing**:
 - Ensure `enableGhostTrail` is true in Clone component
-- Check that clone is in active replay state
-- Verify TrailRenderer component is added
+- Check that clone is in active replay state and moving
+- Verify clone has moved at least `minMoveDistance` since last ghost
+- Ensure `spawnInterval` time has passed since last ghost spawn
 
 **Particles not playing**:
 - Confirm `enableParticleEffects` is enabled
@@ -185,8 +188,10 @@ stuckTrailColor = Color.green;  // Trail color for stuck clones
 - Confirm audio clips are assigned
 
 **Performance issues**:
-- Reduce particle counts in CloneParticleEffects
-- Disable ambient particles if not needed
+- Reduce `maxGhosts` count in GhostTrail component
+- Increase `spawnInterval` to spawn ghosts less frequently
+- Reduce `ghostLifetime` to make ghosts dissipate faster
+- Increase `minMoveDistance` to spawn fewer ghosts
 - Limit maximum number of active clones
 
 ### Debug Information
