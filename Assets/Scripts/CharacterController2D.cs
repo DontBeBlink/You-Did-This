@@ -471,7 +471,12 @@ public class CharacterController2D : ObjectController2D {
                 }
                 ignorePlatformsTime = 0;
                 if (soundManager) {
-                    soundManager.PlayJumpSound();
+                    // Check if this is a wall jump for special sound
+                    if (cData.canWallJump && collisions.hHit && !collisions.below) {
+                        soundManager.PlayWallJumpSound();
+                    } else {
+                        soundManager.PlayJumpSound();
+                    }
                 }
                 JustJumped = true;
             }
@@ -536,6 +541,11 @@ public class CharacterController2D : ObjectController2D {
             Invoke("StopDash", cData.dashDistance / cData.dashSpeed);
             JustDashed = true;
             LastDashDirection = direction;
+            
+            // Play dash sound effect
+            if (soundManager) {
+                soundManager.PlayDashSound();
+            }
         }
     }
 
