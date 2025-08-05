@@ -198,6 +198,47 @@ public class GameManager : MonoBehaviour
     /// </summary>
     private void OnGUI()
     {
+                // --- LEVEL COMPLETE MESSAGE ---
+        if (!string.IsNullOrEmpty(levelCompleteMessage) &&
+            Time.unscaledTime - levelCompleteMessageTime < levelCompleteDisplayDuration)
+        {
+            // Pause the game while showing the level complete message
+            //if (!isPaused) PauseGame();
+
+            var style = new GUIStyle(GUI.skin.label);
+            style.fontSize = 48; // Smaller font size
+            style.alignment = TextAnchor.MiddleCenter;
+            style.normal.textColor = Color.green;
+
+            var subStyle = new GUIStyle(GUI.skin.label);
+            subStyle.fontSize = 24; // Smaller font size
+            subStyle.alignment = TextAnchor.MiddleCenter;
+            subStyle.normal.textColor = Color.yellowNice;
+
+            // Make the area smaller and more centered
+            float boxWidth = 700;
+            float boxHeight = 180;
+            float subBoxHeight = 80;
+            float centerX = (Screen.width - boxWidth) / 2;
+            float centerY = (Screen.height - boxHeight - subBoxHeight) / 2;
+
+            GUI.Label(
+                new Rect(centerX, centerY, boxWidth, boxHeight),
+                levelCompleteMessage,
+                style
+            );
+
+            // Show restart instructions
+            string subMsg = $"Press R to Restart Level/\n" +
+                            $"Press B to Go Back to Previous Level/\n" +
+                            $"Press Esc to Quit";
+            GUI.Label(
+                new Rect(centerX, centerY + boxHeight, boxWidth, subBoxHeight),
+                subMsg,
+                subStyle
+            );
+        }
+
         if (!showDebugInfo || !showDebug) return;
 
         // Create debug information panel in top-left corner
@@ -235,44 +276,7 @@ public class GameManager : MonoBehaviour
         
         GUILayout.EndArea();
 
-        // --- LEVEL COMPLETE MESSAGE ---
-        if (!string.IsNullOrEmpty(levelCompleteMessage) &&
-            Time.unscaledTime - levelCompleteMessageTime < levelCompleteDisplayDuration)
-        {
-            // Pause the game while showing the level complete message
-            if (!isPaused) PauseGame();
 
-            var style = new GUIStyle(GUI.skin.label);
-            style.fontSize = 48; // Smaller font size
-            style.alignment = TextAnchor.MiddleCenter;
-            style.normal.textColor = Color.green;
-
-            var subStyle = new GUIStyle(GUI.skin.label);
-            subStyle.fontSize = 24; // Smaller font size
-            subStyle.alignment = TextAnchor.MiddleCenter;
-            subStyle.normal.textColor = Color.yellowNice;
-
-            // Make the area smaller and more centered
-            float boxWidth = 700;
-            float boxHeight = 180;
-            float subBoxHeight = 80;
-            float centerX = (Screen.width - boxWidth) / 2;
-            float centerY = (Screen.height - boxHeight - subBoxHeight) / 2;
-
-            GUI.Label(
-                new Rect(centerX, centerY, boxWidth, boxHeight),
-                levelCompleteMessage,
-                style
-            );
-
-            // Show restart/previous/quit instructions
-            string subMsg = $"Press R to Restart Level\nPress B to Go Back (Previous Level)\nPress Esc to Quit";
-            GUI.Label(
-                new Rect(centerX, centerY + boxHeight, boxWidth, subBoxHeight),
-                subMsg,
-                subStyle
-            );
-        }
     }
     
     /// <summary>
@@ -297,7 +301,7 @@ public class GameManager : MonoBehaviour
     // Example stub for previous level logic:
     private void GoToPreviousLevel()
     {
-        // for now just go to scene "Room2"
-        UnityEngine.SceneManagement.SceneManager.LoadScene("Room2");
+        // for now just go to scene "Room1"
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Room1");
     }
 }
