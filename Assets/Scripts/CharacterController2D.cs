@@ -54,6 +54,7 @@ public class CharacterController2D : ObjectController2D {
     public bool JustAttacked { get; set; }
     public bool OnWall { get; set; }
     public bool Grounded { get; set; }
+    public CollisionInfo Collisions => collisions;
 
     /// <summary>
     /// Start is called on the frame when a script is enabled just before
