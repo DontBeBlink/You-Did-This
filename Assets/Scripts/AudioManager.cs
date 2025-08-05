@@ -125,12 +125,13 @@ public class AudioManager : MonoBehaviour
     /// Uses PlayOneShot to allow overlapping sounds without interruption.
     /// </summary>
     /// <param name="clip">The AudioClip to play</param>
-    public void PlaySound(AudioClip clip)
+    public void PlaySound(AudioClip clip, float volumeScale = 1f)
     {
-        if (clip != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(clip, masterVolume);
-        }
+        if (clip == null || audioSource == null) return;
+
+        // Apply master volume and scale
+        float volume = Mathf.Clamp01(masterVolume * volumeScale);
+        audioSource.PlayOneShot(clip, volume);
     }
     
     /// <summary>
