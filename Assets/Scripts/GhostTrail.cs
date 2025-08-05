@@ -65,8 +65,7 @@ public class GhostTrail : MonoBehaviour
     private void Awake()
     {
         parentClone = GetComponent<Clone>();
-        parentSpriteRenderer = GetComponent<SpriteRenderer>();
-        
+        parentSpriteRenderer = GetComponentInChildren<SpriteRenderer>();
         lastGhostPosition = transform.position;
         lastGhostTime = Time.time;
         isInitialized = true;
@@ -81,21 +80,34 @@ public class GhostTrail : MonoBehaviour
         
         // Create ghost GameObject
         GameObject ghostObject = new GameObject($"Ghost_{activeGhosts.Count}");
-        ghostObject.transform.position = transform.position;
-        ghostObject.transform.rotation = transform.rotation;
-        ghostObject.transform.localScale = transform.localScale;
-        
+        ghostObject.transform.position = parentSpriteRenderer.transform.position;
+        ghostObject.transform.rotation = parentSpriteRenderer.transform.rotation;
+
+        // Determine look direction (flip X scale if facing left)
+        Vector3 ghostScale = parentSpriteRenderer.transform.localScale;
+        if (parentClone != null && parentClone.Character != null)
+        {
+            bool facingRight = parentClone.Character.FacingRight;
+            // If not facing right, flip X scale
+            if (!facingRight)
+                ghostScale.x = -Mathf.Abs(ghostScale.x);
+            else
+                ghostScale.x = Mathf.Abs(ghostScale.x);
+        }
+        ghostObject.transform.localScale = ghostScale;
+
         // Copy sprite renderer
         SpriteRenderer ghostRenderer = ghostObject.AddComponent<SpriteRenderer>();
         ghostRenderer.sprite = parentSpriteRenderer.sprite;
         ghostRenderer.sortingLayerName = parentSpriteRenderer.sortingLayerName;
-        ghostRenderer.sortingOrder = parentSpriteRenderer.sortingOrder - 1; // Render behind original
-        
+        ghostRenderer.sortingOrder = parentSpriteRenderer.sortingOrder - 1; // Render behind original;
+        ghostRenderer.material = parentSpriteRenderer.material; // Use same material for consistency
+
         // Set ghost color based on clone state
         Color ghostColor = parentClone != null && parentClone.IsStuck ? stuckGhostColor : activeGhostColor;
         ghostColor.a = ghostAlpha;
         ghostRenderer.color = ghostColor;
-        
+
         // Create ghost data
         GhostAfterimage ghost = new GhostAfterimage
         {
@@ -105,9 +117,9 @@ public class GhostTrail : MonoBehaviour
             lifetime = ghostLifetime,
             originalColor = ghostColor
         };
-        
+
         activeGhosts.Add(ghost);
-        
+
         // Remove oldest ghost if we've exceeded max count
         if (activeGhosts.Count > maxGhosts)
         {

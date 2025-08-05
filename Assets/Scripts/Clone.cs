@@ -546,6 +546,12 @@ public class Clone : MonoBehaviour
     public Goal StuckAtGoal => stuckAtGoal;
 
     /// <summary>
+    /// Reference to the CharacterController2D component for movement control.
+    /// Provides access to physics and movement methods for this clone.
+    /// </summary>
+    public CharacterController2D Character => character;
+
+    /// <summary>
     /// Current progress through the action sequence (0.0 to 1.0).
     /// Useful for UI indicators or debugging replay timing.
     /// </summary>

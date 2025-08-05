@@ -111,6 +111,8 @@ GameObject:
   - component: {fileID: 1069890986033099354}
   - component: {fileID: 246914928789019402}
   - component: {fileID: 1674405824665072548}
+  - component: {fileID: 4732753124547771545}
+  - component: {fileID: 1874531090548873653}
   m_Layer: 11
   m_Name: Clones
   m_TagString: Untagged
@@ -247,7 +249,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
-  m_Volume: 0.2
+  m_Volume: 0.4
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -475,7 +477,7 @@ MonoBehaviour:
   cloneMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
   cloneColor: {r: 0, g: 1, b: 1, a: 1}
   cloneAlpha: 0.4
-  enableGhostTrail: 0
+  enableGhostTrail: 1
   enableParticleEffects: 1
   enableGlowEffect: 1
   enableSoundEffects: 1
@@ -494,18 +496,63 @@ MonoBehaviour:
   spawnParticles: {fileID: 2743054105205797000}
   spawnColor: {r: 0, g: 1, b: 1, a: 1}
   spawnParticleCount: 30
-  spawnBurstRadius: 0.5
-  despawnParticles: {fileID: 0}
+  spawnBurstRadius: 0.11
+  despawnParticles: {fileID: 6846322407194288690}
   despawnColor: {r: 1, g: 1, b: 1, a: 1}
   despawnParticleCount: 20
   despawnBurstRadius: 0.3
-  stuckParticles: {fileID: 0}
+  stuckParticles: {fileID: 6441498278050920646}
   stuckColor: {r: 0, g: 1, b: 0, a: 1}
   stuckParticleCount: 15
   stuckBurstRadius: 0.4
   ambientParticles: {fileID: 3051231759048217087}
   enableAmbientParticles: 1
   ambientEmissionRate: 5
+--- !u!114 &4732753124547771545
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 41342835647678644}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a1b2c3d4e5f6789012345678901234ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GhostTrail
+  ghostLifetime: 0.5
+  spawnInterval: 0.01
+  maxGhosts: 25
+  activeGhostColor: {r: 0, g: 0.7696705, b: 1, a: 0.16862746}
+  stuckGhostColor: {r: 0, g: 1, b: 0, a: 1}
+  ghostAlpha: 0.21
+  minMoveDistance: 0.5
+--- !u!114 &1874531090548873653
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 41342835647678644}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3d4e5f6789012345678901234abcdef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CloneSoundEffects
+  spawnSound: {fileID: 0}
+  despawnSound: {fileID: 0}
+  stuckSound: {fileID: 0}
+  movementSounds:
+  - {fileID: 8300000, guid: d66d02700c4dbd342aa208ea4fc8826e, type: 3}
+  - {fileID: 8300000, guid: 2a8231dac1e590b409c6887ae659cc6e, type: 3}
+  spawnVolume: 0.3
+  despawnVolume: 0.2
+  stuckVolume: 0.4
+  movementVolume: 0.23
+  pitchVariation: 0.2
+  enableMovementSounds: 1
+  movementSoundInterval: 0.35
+  minimumMovementSpeed: 0.82
 --- !u!1 &755602812220207599
 GameObject:
   m_ObjectHideFlags: 0
@@ -19869,6 +19916,8 @@ GameObject:
   m_Component:
   - component: {fileID: 5001131491305721336}
   - component: {fileID: 5317202781068630853}
+  - component: {fileID: 235046417351118813}
+  - component: {fileID: 2189072272089144489}
   m_Layer: 0
   m_Name: Sprite
   m_TagString: Untagged
@@ -19916,7 +19965,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 4f8b9543869dafb4d81b84f560aa1c10, type: 2}
+  - {fileID: 2100000, guid: e637db06ca6192d4fa6c189892eabfc5, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -19940,7 +19989,7 @@ SpriteRenderer:
   m_SortingOrder: 1
   m_Sprite: {fileID: -3316437661583186769, guid: c7d5c75323f7dce47876c5c107fba2eb,
     type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.5176471}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.12156863}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -19950,3 +19999,43 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!136 &235046417351118813
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7662770109407060711}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 3
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.13
+  m_Height: 0.34
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.16, z: 0}
+--- !u!114 &2189072272089144489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7662770109407060711}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
+  m_IsGlobal: 0
+  priority: 1.44
+  blendDistance: 1
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: 51e51be8a073082498d3fc2b0b887996, type: 2}
