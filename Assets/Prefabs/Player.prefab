@@ -453,7 +453,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e85db1d91ad68014a84b973146861ac8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  jumpSound: {fileID: 8300000, guid: 936e222492aa4d3488c3d18e9d241464, type: 3}
+  jumpSound: {fileID: 8300000, guid: c82ac82b36792ff458daf24382887ca4, type: 3}
+  landSound: {fileID: 8300000, guid: 7f9d753f92f06084d869e4913f21c1bd, type: 3}
+  jumpVolume: 1
+  landVolume: 0.8
+  walkSounds:
+  - {fileID: 8300000, guid: e7d76f87133bffd4bae3fb8995940c17, type: 3}
+  runSounds:
+  - {fileID: 8300000, guid: e7d76f87133bffd4bae3fb8995940c17, type: 3}
+  walkVolume: 0.3
+  runVolume: 0.5
+  enableMovementSounds: 1
+  walkSoundInterval: 0.6
+  runSoundInterval: 0.4
+  minimumWalkSpeed: 0.5
+  runSpeedThreshold: 3
+  dashSound: {fileID: 8300000, guid: 840ad701b42a85b478d8fd6f3a0a7474, type: 3}
+  wallSlideSound: {fileID: 8300000, guid: 5abb57900b625534a9bfaa3586f9530f, type: 3}
+  wallJumpSound: {fileID: 8300000, guid: c82ac82b36792ff458daf24382887ca4, type: 3}
+  dashVolume: 0.7
+  wallSlideVolume: 0.4
+  wallJumpVolume: 0.8
+  pitchVariation: 0.1
+  use3DAudio: 1
+  spatialBlend: 0.8
+  wallSlideSoundInterval: 0.5
 --- !u!1 &7662770109407060711
 GameObject:
   m_ObjectHideFlags: 0

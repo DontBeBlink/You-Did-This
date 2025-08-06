@@ -35,7 +35,9 @@ public class CharacterSoundManager : MonoBehaviour
     [SerializeField] private AudioClip wallJumpSound;
     [SerializeField] private float dashVolume = 0.7f;
     [SerializeField] private float wallSlideVolume = 0.4f;
+    [SerializeField] private float wallSlideSoundInterval = 0.5f;
     [SerializeField] private float wallJumpVolume = 0.8f;
+
 
     [Header("Audio Settings")]
     [SerializeField] private float pitchVariation = 0.1f;
@@ -48,6 +50,7 @@ public class CharacterSoundManager : MonoBehaviour
     private float lastMovementSoundTime;
     private bool wasGrounded = true;
     private bool wasWallSliding = false;
+    private float lastWallSlideSoundTime = 0f;
 
     /// <summary>
     /// Initialize audio components and get character controller reference.
@@ -123,13 +126,14 @@ public class CharacterSoundManager : MonoBehaviour
     /// </summary>
     private void CheckForWallSliding()
     {
-        bool isWallSliding = characterController.Collisions.hHit && !characterController.Collisions.below;
-        
-        if (!wasWallSliding && isWallSliding)
+        if (!characterController.OnWall) return;
+        bool isWallSliding = characterController.OnWall;
+        float currentTime = Time.time;
+        if (isWallSliding && (currentTime - lastWallSlideSoundTime >= wallSlideSoundInterval))
         {
             PlayWallSlideSound();
+            lastWallSlideSoundTime = currentTime;
         }
-        
         wasWallSliding = isWallSliding;
     }
 
@@ -141,7 +145,7 @@ public class CharacterSoundManager : MonoBehaviour
         if (!characterController.Collisions.below) return; // Only play movement sounds when grounded
         
         float currentTime = Time.time;
-        float distanceMoved = Vector3.Distance(transform.position, lastPosition);
+        float distanceMoved = Vector3.Distance(new Vector3(transform.position.x, 0, 0), new Vector3(lastPosition.x, 0, 0));
         float speed = distanceMoved / Time.deltaTime;
         
         // Determine if we should play walk or run sounds
