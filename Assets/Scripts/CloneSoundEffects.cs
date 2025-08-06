@@ -1,43 +1,32 @@
 using UnityEngine;
 
 /// <summary>
-/// Manages audio effects for clone actions and state changes.
-/// Provides subtle audio feedback to enhance the clone system experience
-/// without overwhelming the player with too much sound.
+/// Manages audio effects specific to clone actions and state changes.
+/// Provides clone-specific audio feedback while delegating movement sounds to CharacterSoundManager.
 /// 
 /// Features:
 /// - Spawn/despawn sound effects
 /// - Stuck state audio feedback
-/// - Movement sounds for clones (optional)
+/// - Integration with universal CharacterSoundManager for movement sounds
 /// - Volume and pitch modulation for variety
-/// - Audio source pooling for performance
 /// </summary>
 [RequireComponent(typeof(AudioSource))]
 public class CloneSoundEffects : MonoBehaviour
 {
-    [Header("Sound Effects")]
+    [Header("Clone-Specific Sound Effects")]
     [SerializeField] private AudioClip spawnSound;
     [SerializeField] private AudioClip despawnSound;
     [SerializeField] private AudioClip stuckSound;
-    [SerializeField] private AudioClip[] movementSounds;
     
     [Header("Audio Settings")]
     [SerializeField] private float spawnVolume = 0.3f;
     [SerializeField] private float despawnVolume = 0.2f;
     [SerializeField] private float stuckVolume = 0.4f;
-    [SerializeField] private float movementVolume = 0.1f;
     [SerializeField] private float pitchVariation = 0.2f;
-    [SerializeField] private bool enableMovementSounds = false;
-    
-    [Header("Movement Sound Settings")]
-    [SerializeField] private float movementSoundInterval = 0.5f;
-    [SerializeField] private float minimumMovementSpeed = 1.0f;
     
     private AudioSource audioSource;
+    private CharacterSoundManager characterSoundManager;
     private Clone parentClone;
-    private CharacterController2D character;
-    private float lastMovementSoundTime;
-    private Vector3 lastPosition;
     
     /// <summary>
     /// Initialize audio components and get clone reference.
@@ -46,7 +35,7 @@ public class CloneSoundEffects : MonoBehaviour
     {
         audioSource = GetComponent<AudioSource>();
         parentClone = GetComponent<Clone>();
-        character = GetComponent<CharacterController2D>();
+        characterSoundManager = GetComponent<CharacterSoundManager>();
         
         SetupAudioSource();
     }
@@ -67,44 +56,6 @@ public class CloneSoundEffects : MonoBehaviour
         
         // Slightly lower priority than player sounds
         audioSource.priority = 150;
-    }
-    
-    /// <summary>
-    /// Initialize position tracking for movement sounds.
-    /// </summary>
-    private void Start()
-    {
-        lastPosition = transform.position;
-    }
-    
-    /// <summary>
-    /// Monitor clone movement for optional movement sounds.
-    /// </summary>
-    private void Update()
-    {
-        if (enableMovementSounds && parentClone != null && parentClone.IsReplaying)
-        {
-            CheckForMovementSound();
-        }
-    }
-    
-    /// <summary>
-    /// Check if clone is moving enough to play movement sound.
-    /// </summary>
-    private void CheckForMovementSound()
-    {
-        if (Time.time - lastMovementSoundTime < movementSoundInterval) return;
-        
-        float distanceMoved = Vector3.Distance(transform.position, lastPosition);
-        float speed = distanceMoved / Time.deltaTime;
-        
-        if (speed >= minimumMovementSpeed && movementSounds.Length > 0)
-        {
-            PlayMovementSound();
-            lastMovementSoundTime = Time.time;
-        }
-        
-        lastPosition = transform.position;
     }
     
     /// <summary>
@@ -129,18 +80,6 @@ public class CloneSoundEffects : MonoBehaviour
     public void PlayStuckSound()
     {
         PlaySound(stuckSound, stuckVolume);
-    }
-    
-    /// <summary>
-    /// Play movement sound effect.
-    /// </summary>
-    private void PlayMovementSound()
-    {
-        if (movementSounds.Length > 0)
-        {
-            AudioClip randomMovementSound = movementSounds[Random.Range(0, movementSounds.Length)];
-            PlaySound(randomMovementSound, movementVolume);
-        }
     }
     
     /// <summary>
@@ -182,12 +121,15 @@ public class CloneSoundEffects : MonoBehaviour
     }
     
     /// <summary>
-    /// Enable or disable movement sounds.
+    /// Enable or disable movement sounds via CharacterSoundManager.
     /// </summary>
     /// <param name="enabled">Whether movement sounds should be enabled</param>
     public void SetMovementSoundsEnabled(bool enabled)
     {
-        enableMovementSounds = enabled;
+        if (characterSoundManager != null)
+        {
+            characterSoundManager.SetMovementSoundsEnabled(enabled);
+        }
     }
     
     /// <summary>
@@ -199,6 +141,12 @@ public class CloneSoundEffects : MonoBehaviour
         if (audioSource != null)
         {
             audioSource.volume = masterVolume;
+        }
+        
+        // Also apply to character sound manager for movement sounds
+        if (characterSoundManager != null)
+        {
+            characterSoundManager.SetMasterVolumeMultiplier(masterVolume);
         }
     }
 }

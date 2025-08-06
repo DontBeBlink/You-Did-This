@@ -354,7 +354,7 @@ public class CloneManager : MonoBehaviour
     {
         // Play clone creation sound
         if (cloneCreateSound != null && AudioManager.Instance != null)
-            AudioManager.Instance.PlaySound(cloneCreateSound);
+            AudioManager.Instance.PlaySound(cloneCreateSound, 0.4f); // will add variable for sound soon
 
         // Wait for fade effect
         if (cameraController != null)

@@ -54,6 +54,7 @@ public class CharacterController2D : ObjectController2D {
     public bool JustAttacked { get; set; }
     public bool OnWall { get; set; }
     public bool Grounded { get; set; }
+    public CollisionInfo Collisions => collisions;
 
     /// <summary>
     /// Start is called on the frame when a script is enabled just before
@@ -471,7 +472,12 @@ public class CharacterController2D : ObjectController2D {
                 }
                 ignorePlatformsTime = 0;
                 if (soundManager) {
-                    soundManager.PlayJumpSound();
+                    // Check if this is a wall jump for special sound
+                    if (cData.canWallJump && collisions.hHit && !collisions.below) {
+                        soundManager.PlayWallJumpSound();
+                    } else {
+                        soundManager.PlayJumpSound();
+                    }
                 }
                 JustJumped = true;
             }
@@ -536,6 +542,11 @@ public class CharacterController2D : ObjectController2D {
             Invoke("StopDash", cData.dashDistance / cData.dashSpeed);
             JustDashed = true;
             LastDashDirection = direction;
+            
+            // Play dash sound effect
+            if (soundManager) {
+                soundManager.PlayDashSound();
+            }
         }
     }
 

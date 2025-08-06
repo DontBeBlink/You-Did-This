@@ -446,7 +446,7 @@ public class ObjectController2D : MonoBehaviour {
     }
 
     // Stores temporary collision info to be used during calculations
-    protected struct CollisionInfo {
+    public struct CollisionInfo {
         public bool above, below, left, right;
         public RaycastHit2D hHit, vHit;
         public bool onGround;
