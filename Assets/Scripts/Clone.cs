@@ -220,10 +220,12 @@ public class Clone : MonoBehaviour
         if (originalPlayerSprite != null)
         {
             startActionSprite = originalPlayerSprite;
+            Debug.Log($"Clone {index}: Set startActionSprite from original player: {startActionSprite.name}");
         }
         else if (spriteRenderer != null)
         {
             startActionSprite = spriteRenderer.sprite;
+            Debug.Log($"Clone {index}: Set startActionSprite from current sprite: {startActionSprite?.name}");
         }
 
         // Disable player input components to prevent interference with replay
@@ -288,11 +290,7 @@ public class Clone : MonoBehaviour
         currentActionIndex = 0;
         wasJumpHeld = false; // Reset jump held state for clean start
         
-        // Capture start sprite if not already set during initialization
-        if (startActionSprite == null && spriteRenderer != null)
-        {
-            startActionSprite = spriteRenderer.sprite;
-        }
+        // Note: startActionSprite should already be set in InitializeClone
         
         // Trigger visual effects
         if (particleEffects != null)
@@ -356,11 +354,7 @@ public class Clone : MonoBehaviour
                 {
                     this.transform.position = actionsToReplay[0].position;
                     
-                    // Ensure start sprite is captured if not already set
-                    if (startActionSprite == null && spriteRenderer != null)
-                    {
-                        startActionSprite = spriteRenderer.sprite;
-                    }
+                    // Note: startActionSprite should already be set in InitializeClone
                 }
                 lastActionReplayed = null;
             }
@@ -376,11 +370,7 @@ public class Clone : MonoBehaviour
             // Capture sprite BEFORE executing action to get the sprite in the correct state
             if (currentActionIndex == 0)
             {
-                // For first action, capture start sprite before execution (if not already set)
-                if (startActionSprite == null && spriteRenderer != null)
-                {
-                    startActionSprite = spriteRenderer.sprite;
-                }
+                // For first action, just execute (startActionSprite should already be set in InitializeClone)
                 ExecuteAction(actionsToReplay[currentActionIndex]);
                 
                 // Notify ghost script to refresh after setting sprite
@@ -393,6 +383,7 @@ public class Clone : MonoBehaviour
                 if (endActionSprite == null && spriteRenderer != null)
                 {
                     endActionSprite = spriteRenderer.sprite;
+                    Debug.Log($"Clone {cloneIndex}: Set endActionSprite: {endActionSprite?.name}");
                 }
                 ExecuteAction(actionsToReplay[currentActionIndex]);
                 

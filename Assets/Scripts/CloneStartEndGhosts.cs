@@ -116,11 +116,20 @@ public class CloneStartEndGhosts : MonoBehaviour
         // Use the stored sprite from the clone if available (for start/end), otherwise fallback to parent's sprite
         Sprite spriteToUse = null;
         if (name == "StartGhost" && parentClone != null && parentClone.StartActionSprite != null)
+        {
             spriteToUse = parentClone.StartActionSprite;
+            Debug.Log($"StartGhost using StartActionSprite: {spriteToUse.name}");
+        }
         else if (name == "EndGhost" && parentClone != null && parentClone.EndActionSprite != null)
+        {
             spriteToUse = parentClone.EndActionSprite;
+            Debug.Log($"EndGhost using EndActionSprite: {spriteToUse.name}");
+        }
         if (spriteToUse == null)
+        {
             spriteToUse = parentSpriteRenderer.sprite;
+            Debug.Log($"{name} using fallback sprite: {spriteToUse?.name}");
+        }
         ghostRenderer.sprite = spriteToUse;
         ghostRenderer.sortingLayerName = parentSpriteRenderer.sortingLayerName;
         ghostRenderer.sortingOrder = parentSpriteRenderer.sortingOrder - 2; // Render behind clone and trail ghosts

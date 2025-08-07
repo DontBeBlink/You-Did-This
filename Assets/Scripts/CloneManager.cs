@@ -228,6 +228,7 @@ public class CloneManager : MonoBehaviour
             if (playerSpriteRenderer != null)
             {
                 recordingStartSprite = playerSpriteRenderer.sprite;
+                Debug.Log($"CloneManager: Captured recording start sprite: {recordingStartSprite?.name}");
             }
         }
     }
