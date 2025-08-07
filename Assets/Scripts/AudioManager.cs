@@ -102,6 +102,15 @@ public class AudioManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Play the retract sound effect.
+    /// Alias for PlayCloneRetractSound for convenience.
+    /// </summary>
+    public void PlayRetractSound()
+    {
+        PlayCloneRetractSound();
+    }
+    
+    /// <summary>
     /// Play the goal reached sound effect.
     /// Called by Goal objects when a clone successfully reaches them.
     /// </summary>

@@ -363,6 +363,59 @@ public class CloneManager : MonoBehaviour
             yield return new WaitForSeconds(0.5f);
     }
 
+    /// <summary>
+    /// Handle retract transition with animation, audio, and player movement.
+    /// Reuses the same transition system as clone creation but with retract-specific effects.
+    /// </summary>
+    private IEnumerator PlayRetractTransition(Clone targetClone)
+    {
+        if (activePlayer != null)
+        {
+            // Trigger retract animation and immobilize player briefly
+            Animator playerAnimator = activePlayer.GetComponent<Animator>();
+            if (playerAnimator != null)
+                playerAnimator.SetTrigger("pickup"); // Reuse pickup animation for retract
+
+            CharacterController2D character = activePlayer.GetComponent<CharacterController2D>();
+            if (character != null)
+            {
+                character.Immobile = true;
+                character.SetPhysicsState(character.transform.position, Vector2.zero, Vector2.zero);
+            }
+
+            // Play retract sound
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayRetractSound();
+            }
+
+            yield return new WaitForSeconds(0.5f); // Wait for animation
+
+            // Move player to target clone's current position
+            if (targetClone != null)
+            {
+                Vector3 targetPosition = targetClone.transform.position;
+                activePlayer.transform.position = targetPosition;
+                
+                // Reset physics state at new position
+                if (character != null)
+                {
+                    character.SetPhysicsState(targetPosition, Vector2.zero, Vector2.zero);
+                }
+            }
+
+            // Re-enable player movement
+            if (character != null)
+                character.Immobile = false;
+        }
+
+        // Wait for any fade effects
+        if (cameraController != null)
+            yield return new WaitForSeconds(cameraController.fadeOutDuration);
+        else
+            yield return new WaitForSeconds(0.3f);
+    }
+
     #endregion
 
     #region Camera Zoom Effects
@@ -558,7 +611,8 @@ public class CloneManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Remove clones back to the last non-stuck clone.
+    /// Remove clones back to the last non-stuck clone and move player to that clone's current position.
+    /// Includes animation and audio effects for enhanced feedback.
     /// </summary>
     public bool RetractToLastClone()
     {
@@ -576,17 +630,37 @@ public class CloneManager : MonoBehaviour
         
         if (lastClone == null) return false;
         
+        // Start retract transition with animation and audio
+        StartCoroutine(PerformRetractTransition(lastClone));
+        
+        return true;
+    }
+
+    /// <summary>
+    /// Perform the retract transition with animation, audio, and player movement.
+    /// </summary>
+    private IEnumerator PerformRetractTransition(Clone targetClone)
+    {
+        // Stop current recording if active
+        if (actionRecorder != null && actionRecorder.IsRecording)
+            actionRecorder.StopRecording();
+        
+        isRecording = false;
+        
+        // Play retract transition effects
+        yield return StartCoroutine(PlayRetractTransition(targetClone));
+        
+        // Remove newer clones
         for (int i = allClones.Count - 1; i >= 0; i--)
         {
-            if (allClones[i].CloneIndex > lastClone.CloneIndex)
+            if (allClones[i].CloneIndex > targetClone.CloneIndex)
             {
                 Destroy(allClones[i].gameObject);
                 allClones.RemoveAt(i);
             }
         }
         
-        Debug.Log($"Retracted to clone {lastClone.CloneIndex}");
-        return true;
+        Debug.Log($"Retracted to clone {targetClone.CloneIndex}");
     }
 
     #endregion
