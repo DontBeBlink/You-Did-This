@@ -98,6 +98,40 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
+    /// Handle additional input checks each frame.
+    /// Processes inputs that aren't part of the main Input System actions.
+    /// </summary>
+    void Update()
+    {
+        // Check for retract input (Z key)
+        if (UnityEngine.InputSystem.Keyboard.current.zKey.wasPressedThisFrame)
+        {
+            HandleRetractInput();
+        }
+    }
+
+    /// <summary>
+    /// Handle retract input to remove last clone and move player to its position.
+    /// Provides keyboard alternative to the UI retract button.
+    /// </summary>
+    private void HandleRetractInput()
+    {
+        CloneManager cloneManager = CloneManager.instance;
+        if (cloneManager != null)
+        {
+            bool retracted = cloneManager.RetractToLastClone();
+            if (!retracted)
+            {
+                Debug.Log("Cannot retract: No clones available or only stuck clones remain");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("No CloneManager found for retract operation");
+        }
+    }
+
+    /// <summary>
     /// Handle movement input from Input System.
     /// Updates both local movement state and ActionRecorder for clone system.
     /// Called when movement input is performed or canceled.
