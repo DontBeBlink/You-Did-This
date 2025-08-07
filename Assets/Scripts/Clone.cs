@@ -6,9 +6,12 @@ using UnityEngine;
 /// Each clone represents a "ghost" of the player's previous actions, faithfully reproducing
 /// movement, input timing, and interactions to serve as puzzle elements.
 /// </summary>
-[RequireComponent(typeof(CharacterController2D))]
+ [RequireComponent(typeof(CharacterController2D))]
 public class Clone : MonoBehaviour
 {
+    // Store the sprite at the first and last action for accurate start/end ghost visuals
+    private Sprite startActionSprite = null;
+    private Sprite endActionSprite = null;
     [Header("Clone Settings")]
     [SerializeField] private Material cloneMaterial;           // Optional custom material for clone appearance
     [SerializeField] private Color cloneColor = Color.cyan;    // Base color for active clones
@@ -211,6 +214,12 @@ public class Clone : MonoBehaviour
         // Calculate total replay duration from the last action's timestamp
         replayDuration = actionsToReplay.Count > 0 ? actionsToReplay[actionsToReplay.Count - 1].timestamp : 0f;
 
+        if (actionsToReplay.Count > 0 && spriteRenderer != null)
+        {
+            // Optionally, you could use a method to get the sprite for the first action if you store it in PlayerAction
+            startActionSprite = spriteRenderer.sprite;
+        }
+
         // Disable player input components to prevent interference with replay
         PlayerController playerController = GetComponent<PlayerController>();
         if (playerController != null)
@@ -344,7 +353,36 @@ public class Clone : MonoBehaviour
         while (currentActionIndex < actionsToReplay.Count &&
                actionsToReplay[currentActionIndex].timestamp <= currentReplayTime)
         {
-            ExecuteAction(actionsToReplay[currentActionIndex]);
+            if (currentActionIndex == 0)
+            {
+                ExecuteAction(actionsToReplay[currentActionIndex]);
+                // Only set startActionSprite if it is null (first ever replay)
+                if (startActionSprite == null && character != null)
+                {
+                    var sr = character.GetComponent<SpriteRenderer>();
+                    if (sr != null) startActionSprite = sr.sprite;
+                }
+                // Notify ghost script to refresh after setting sprite
+                var ghosts = GetComponent<CloneStartEndGhosts>();
+                if (ghosts != null) ghosts.RefreshGhosts();
+            }
+            else if (currentActionIndex == actionsToReplay.Count - 1)
+            {
+                ExecuteAction(actionsToReplay[currentActionIndex]);
+                if (character != null)
+                {
+                    var sr = character.GetComponent<SpriteRenderer>();
+                    if (sr != null) endActionSprite = sr.sprite;
+                }
+                // Notify ghost script to refresh after setting sprite
+                var ghosts = GetComponent<CloneStartEndGhosts>();
+                ghosts.ShowEndGhost = true;
+                if (ghosts != null) ghosts.RefreshGhosts();
+            }
+            else
+            {
+                ExecuteAction(actionsToReplay[currentActionIndex]);
+            }
             lastActionReplayed = actionsToReplay[currentActionIndex];
             currentActionIndex++;
         }
@@ -571,10 +609,21 @@ public class Clone : MonoBehaviour
     public PlayerAction? FirstAction => actionsToReplay != null && actionsToReplay.Count > 0 ? actionsToReplay[0] : null;
 
     /// <summary>
+    /// Sprite at the first recorded action (for start ghost marker)
+    /// </summary>
+    public Sprite StartActionSprite => startActionSprite;
+
+
+    /// <summary>
     /// Get the last recorded action in the sequence.
     /// Used for retract system to access final position and state.
     /// </summary>
     public PlayerAction? LastAction => actionsToReplay != null && actionsToReplay.Count > 0 ? actionsToReplay[actionsToReplay.Count - 1] : null;
+
+    /// <summary>
+    /// Sprite at the last recorded action (for end ghost marker)
+    /// </summary>
+    public Sprite EndActionSprite => endActionSprite;
 
     /// <summary>
     /// Cleanup logging when clone is destroyed.

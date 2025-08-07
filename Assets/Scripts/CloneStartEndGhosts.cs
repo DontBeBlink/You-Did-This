@@ -8,20 +8,32 @@ using UnityEngine;
 public class CloneStartEndGhosts : MonoBehaviour
 {
     [Header("Start/End Ghost Settings")]
-    [SerializeField] private Color startGhostColor = Color.blue;    // Color for start position ghost
-    [SerializeField] private Color endGhostColor = Color.red;       // Color for end position ghost
-    [SerializeField] private float ghostAlpha = 0.6f;              // Alpha for start/end ghosts (more visible than trail)
-    [SerializeField] private float ghostScale = 1.2f;              // Scale multiplier for start/end ghosts
+    [SerializeField] private Color startGhostColor = Color.lightCyan;    // Color for start position ghost
+    [SerializeField] private Color endGhostColor = Color.darkCyan;       // Color for end position ghost
+    [SerializeField] private float ghostAlpha = 0.4f;              // Alpha for start/end ghosts (more visible than trail)
+    [SerializeField] private float ghostScale = 1f;              // Scale multiplier for start/end ghosts
     [SerializeField] private bool showStartGhost = true;            // Whether to show start position ghost
-    [SerializeField] private bool showEndGhost = true;              // Whether to show end position ghost
-    
+    [SerializeField] private bool showEndGhost = false;              // Whether to show end position ghost
+
+    public bool ShowStartGhost
+    {
+        get { return showStartGhost; }
+        set { showStartGhost = value; }
+    }
+
+    public bool ShowEndGhost
+    {
+        get { return showEndGhost; }
+        set { showEndGhost = value; }
+    }
+
     // References
     private Clone parentClone;
     private SpriteRenderer parentSpriteRenderer;
     private GameObject startGhost;
     private GameObject endGhost;
     private bool isInitialized = false;
-    
+
     /// <summary>
     /// Initialize the start/end ghost system.
     /// </summary>
@@ -31,7 +43,7 @@ public class CloneStartEndGhosts : MonoBehaviour
         parentSpriteRenderer = GetComponentInChildren<SpriteRenderer>();
         isInitialized = true;
     }
-    
+
     /// <summary>
     /// Create start and end ghosts when the clone starts replaying.
     /// </summary>
@@ -39,41 +51,41 @@ public class CloneStartEndGhosts : MonoBehaviour
     {
         if (!isInitialized || parentClone == null || parentSpriteRenderer == null)
             return;
-            
+
         // Wait a frame to ensure clone is fully initialized
-        Invoke(nameof(CreateStartEndGhosts), 0.1f);
+       // Invoke(nameof(CreateStartEndGhosts), 0.1f);
     }
-    
+
     /// <summary>
     /// Create the start and end position ghost markers.
     /// </summary>
     private void CreateStartEndGhosts()
     {
         if (parentClone == null) return;
-        
+
         // Get first and last actions
         PlayerAction? firstAction = parentClone.FirstAction;
         PlayerAction? lastAction = parentClone.LastAction;
-        
+
         // Create start ghost
         if (showStartGhost && firstAction.HasValue)
         {
             startGhost = CreateGhostMarker(firstAction.Value, startGhostColor, "StartGhost", firstAction.Value.facingRight);
         }
-        
+
         // Create end ghost (only if different from start position)
         if (showEndGhost && lastAction.HasValue)
         {
-            bool isDifferentPosition = !firstAction.HasValue || 
+            bool isDifferentPosition = !firstAction.HasValue ||
                 Vector3.Distance(firstAction.Value.position, lastAction.Value.position) > 0.1f;
-                
+
             if (isDifferentPosition)
             {
                 endGhost = CreateGhostMarker(lastAction.Value, endGhostColor, "EndGhost", lastAction.Value.facingRight);
             }
         }
     }
-    
+
     /// <summary>
     /// Create a ghost marker at the specified action position.
     /// </summary>
@@ -85,12 +97,12 @@ public class CloneStartEndGhosts : MonoBehaviour
     private GameObject CreateGhostMarker(PlayerAction action, Color color, string name, bool facingRight)
     {
         if (parentSpriteRenderer == null) return null;
-        
+
         // Create ghost GameObject
         GameObject ghostObject = new GameObject($"Clone_{parentClone.CloneIndex}_{name}");
         ghostObject.transform.position = action.position;
         ghostObject.transform.rotation = parentSpriteRenderer.transform.rotation;
-        
+
         // Set scale and direction
         Vector3 scale = parentSpriteRenderer.transform.localScale * ghostScale;
         if (!facingRight)
@@ -98,33 +110,41 @@ public class CloneStartEndGhosts : MonoBehaviour
         else
             scale.x = Mathf.Abs(scale.x);
         ghostObject.transform.localScale = scale;
-        
+
         // Copy sprite renderer
         SpriteRenderer ghostRenderer = ghostObject.AddComponent<SpriteRenderer>();
-        ghostRenderer.sprite = parentSpriteRenderer.sprite;
+        // Use the stored sprite from the clone if available (for start/end), otherwise fallback to parent's sprite
+        Sprite spriteToUse = null;
+        if (name == "StartGhost" && parentClone != null && parentClone.StartActionSprite != null)
+            spriteToUse = parentClone.StartActionSprite;
+        else if (name == "EndGhost" && parentClone != null && parentClone.EndActionSprite != null)
+            spriteToUse = parentClone.EndActionSprite;
+        if (spriteToUse == null)
+            spriteToUse = parentSpriteRenderer.sprite;
+        ghostRenderer.sprite = spriteToUse;
         ghostRenderer.sortingLayerName = parentSpriteRenderer.sortingLayerName;
         ghostRenderer.sortingOrder = parentSpriteRenderer.sortingOrder - 2; // Render behind clone and trail ghosts
         ghostRenderer.material = parentSpriteRenderer.material;
-        
+
         // Set ghost color
         Color ghostColor = color;
         ghostColor.a = ghostAlpha;
         ghostRenderer.color = ghostColor;
-        
+
         // Add a subtle pulsing effect to make it more noticeable
         GhostPulse pulseEffect = ghostObject.AddComponent<GhostPulse>();
         pulseEffect.Initialize(ghostColor, 1.0f, 0.3f); // Slow pulse
-        
+
         return ghostObject;
     }
-    
+
     /// <summary>
     /// Update ghosts if clone state changes.
     /// </summary>
     private void Update()
     {
         if (!isInitialized || parentClone == null) return;
-        
+
         // Update ghost colors based on clone state
         if (parentClone.IsStuck)
         {
@@ -132,7 +152,7 @@ public class CloneStartEndGhosts : MonoBehaviour
             UpdateGhostColor(endGhost, Color.green);
         }
     }
-    
+
     /// <summary>
     /// Update the color of a ghost marker.
     /// </summary>
@@ -141,13 +161,13 @@ public class CloneStartEndGhosts : MonoBehaviour
     private void UpdateGhostColor(GameObject ghost, Color newColor)
     {
         if (ghost == null) return;
-        
+
         SpriteRenderer renderer = ghost.GetComponent<SpriteRenderer>();
         if (renderer != null)
         {
             newColor.a = ghostAlpha;
             renderer.color = newColor;
-            
+
             // Update pulse effect color too
             GhostPulse pulseEffect = ghost.GetComponent<GhostPulse>();
             if (pulseEffect != null)
@@ -156,7 +176,7 @@ public class CloneStartEndGhosts : MonoBehaviour
             }
         }
     }
-    
+
     /// <summary>
     /// Clean up ghost markers when the component is destroyed.
     /// </summary>
@@ -166,11 +186,19 @@ public class CloneStartEndGhosts : MonoBehaviour
         {
             DestroyImmediate(startGhost);
         }
-        
+
         if (endGhost != null)
         {
             DestroyImmediate(endGhost);
         }
+    }
+    // Add this to CloneStartEndGhosts.cs (inside the class)
+    public void RefreshGhosts()
+    {
+        // Destroy old ghosts if they exist
+        if (startGhost != null) Destroy(startGhost);
+        if (endGhost != null) Destroy(endGhost);
+        CreateStartEndGhosts();
     }
 }
 
@@ -184,7 +212,7 @@ public class GhostPulse : MonoBehaviour
     private float pulseSpeed;
     private float pulseAmount;
     private float startTime;
-    
+
     /// <summary>
     /// Initialize the pulse effect.
     /// </summary>
@@ -199,7 +227,7 @@ public class GhostPulse : MonoBehaviour
         pulseAmount = amount;
         startTime = Time.time;
     }
-    
+
     /// <summary>
     /// Update the base color for pulsing.
     /// </summary>
@@ -208,14 +236,14 @@ public class GhostPulse : MonoBehaviour
     {
         baseColor = newColor;
     }
-    
+
     /// <summary>
     /// Update the pulsing effect each frame.
     /// </summary>
     private void Update()
     {
         if (spriteRenderer == null) return;
-        
+
         float pulse = Mathf.Sin((Time.time - startTime) * pulseSpeed) * pulseAmount;
         Color currentColor = baseColor;
         currentColor.a = Mathf.Clamp01(baseColor.a + pulse);

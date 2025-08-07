@@ -681,7 +681,7 @@ public class CloneManager : MonoBehaviour
         // Remove newer clones
         for (int i = allClones.Count - 1; i >= 0; i--)
         {
-            if (allClones[i].CloneIndex > targetClone.CloneIndex)
+            if (allClones[i].CloneIndex > targetClone.CloneIndex - 1)
             {
                 Destroy(allClones[i].gameObject);
                 allClones.RemoveAt(i);
