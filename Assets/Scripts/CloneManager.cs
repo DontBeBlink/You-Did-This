@@ -47,6 +47,7 @@ public class CloneManager : MonoBehaviour
     private bool isRecording = false;
     private int nextCloneIndex = 0;
     private bool isProcessingLoop = false;
+    private Sprite recordingStartSprite = null; // Store sprite when recording starts
 
     // Camera zoom state
     private float originalOrthoSize;
@@ -188,6 +189,8 @@ public class CloneManager : MonoBehaviour
     // For Master of Time mode, start recording immediately AND play transition
     if (masterOfTimeMode && actionRecorder != null)
     {
+        // Capture the sprite when recording starts
+        CaptureRecordingStartSprite();
         actionRecorder.StartRecording();
         // Still play transition but don't wait for it to complete
         StartCoroutine(PlayTransitionEffects(true));
@@ -207,7 +210,26 @@ public class CloneManager : MonoBehaviour
         yield return StartCoroutine(PlayTransitionEffects(true));
         
         if (actionRecorder != null)
+        {
+            // Capture the sprite when recording starts
+            CaptureRecordingStartSprite();
             actionRecorder.StartRecording();
+        }
+    }
+
+    /// <summary>
+    /// Capture the player's sprite when recording starts for accurate start ghost markers.
+    /// </summary>
+    private void CaptureRecordingStartSprite()
+    {
+        if (activePlayer != null)
+        {
+            SpriteRenderer playerSpriteRenderer = activePlayer.GetComponent<SpriteRenderer>();
+            if (playerSpriteRenderer != null)
+            {
+                recordingStartSprite = playerSpriteRenderer.sprite;
+            }
+        }
     }
 
     #endregion
@@ -568,9 +590,11 @@ public class CloneManager : MonoBehaviour
         if (clone == null)
             clone = cloneObject.AddComponent<Clone>();
 
-        // Initialize clone with recorded actions
+        // Initialize clone with recorded actions and original player sprite
         List<PlayerAction> recordedActions = actionRecorder.GetRecordedActions();
-        clone.InitializeClone(recordedActions, nextCloneIndex++);
+        
+        // Use the sprite that was captured when recording started
+        clone.InitializeClone(recordedActions, nextCloneIndex++, recordingStartSprite);
         allClones.Add(clone);
         clone.StartReplay();
 

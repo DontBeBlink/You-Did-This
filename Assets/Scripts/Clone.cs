@@ -197,7 +197,8 @@ public class Clone : MonoBehaviour
     /// </summary>
     /// <param name="actions">Sequence of PlayerActions to replay</param>
     /// <param name="index">Unique identifier for this clone</param>
-    public void InitializeClone(List<PlayerAction> actions, int index)
+    /// <param name="originalPlayerSprite">The sprite from the original player when recording started</param>
+    public void InitializeClone(List<PlayerAction> actions, int index, Sprite originalPlayerSprite = null)
     {
         // Validate and store the action sequence
         if (actions == null || actions.Count == 0)
@@ -214,9 +215,13 @@ public class Clone : MonoBehaviour
         // Calculate total replay duration from the last action's timestamp
         replayDuration = actionsToReplay.Count > 0 ? actionsToReplay[actionsToReplay.Count - 1].timestamp : 0f;
 
-        // Capture the start sprite from the player at the time the clone was created
+        // Capture the start sprite from the original player if provided, otherwise use current sprite
         // This represents the sprite state when recording began
-        if (spriteRenderer != null)
+        if (originalPlayerSprite != null)
+        {
+            startActionSprite = originalPlayerSprite;
+        }
+        else if (spriteRenderer != null)
         {
             startActionSprite = spriteRenderer.sprite;
         }
