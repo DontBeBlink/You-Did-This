@@ -214,9 +214,10 @@ public class Clone : MonoBehaviour
         // Calculate total replay duration from the last action's timestamp
         replayDuration = actionsToReplay.Count > 0 ? actionsToReplay[actionsToReplay.Count - 1].timestamp : 0f;
 
-        if (actionsToReplay.Count > 0 && spriteRenderer != null)
+        // Capture the start sprite from the player at the time the clone was created
+        // This represents the sprite state when recording began
+        if (spriteRenderer != null)
         {
-            // Optionally, you could use a method to get the sprite for the first action if you store it in PlayerAction
             startActionSprite = spriteRenderer.sprite;
         }
 
@@ -282,6 +283,12 @@ public class Clone : MonoBehaviour
         currentActionIndex = 0;
         wasJumpHeld = false; // Reset jump held state for clean start
         
+        // Capture start sprite if not already set during initialization
+        if (startActionSprite == null && spriteRenderer != null)
+        {
+            startActionSprite = spriteRenderer.sprite;
+        }
+        
         // Trigger visual effects
         if (particleEffects != null)
         {
@@ -341,7 +348,15 @@ public class Clone : MonoBehaviour
                 wasJumpHeld = false; // Reset jump state for clean loop restart
                 // Reset position to where the replay started for loop consistency
                 if (actionsToReplay != null && actionsToReplay.Count > 0)
+                {
                     this.transform.position = actionsToReplay[0].position;
+                    
+                    // Ensure start sprite is captured if not already set
+                    if (startActionSprite == null && spriteRenderer != null)
+                    {
+                        startActionSprite = spriteRenderer.sprite;
+                    }
+                }
                 lastActionReplayed = null;
             }
             return;
@@ -353,31 +368,36 @@ public class Clone : MonoBehaviour
         while (currentActionIndex < actionsToReplay.Count &&
                actionsToReplay[currentActionIndex].timestamp <= currentReplayTime)
         {
+            // Capture sprite BEFORE executing action to get the sprite in the correct state
             if (currentActionIndex == 0)
             {
-                ExecuteAction(actionsToReplay[currentActionIndex]);
-                // Only set startActionSprite if it is null (first ever replay)
-                if (startActionSprite == null && character != null)
+                // For first action, capture start sprite before execution (if not already set)
+                if (startActionSprite == null && spriteRenderer != null)
                 {
-                    var sr = character.GetComponent<SpriteRenderer>();
-                    if (sr != null) startActionSprite = sr.sprite;
+                    startActionSprite = spriteRenderer.sprite;
                 }
+                ExecuteAction(actionsToReplay[currentActionIndex]);
+                
                 // Notify ghost script to refresh after setting sprite
                 var ghosts = GetComponent<CloneStartEndGhosts>();
                 if (ghosts != null) ghosts.RefreshGhosts();
             }
             else if (currentActionIndex == actionsToReplay.Count - 1)
             {
-                ExecuteAction(actionsToReplay[currentActionIndex]);
-                if (character != null)
+                // For last action, capture end sprite before execution
+                if (endActionSprite == null && spriteRenderer != null)
                 {
-                    var sr = character.GetComponent<SpriteRenderer>();
-                    if (sr != null) endActionSprite = sr.sprite;
+                    endActionSprite = spriteRenderer.sprite;
                 }
-                // Notify ghost script to refresh after setting sprite
+                ExecuteAction(actionsToReplay[currentActionIndex]);
+                
+                // Notify ghost script to show end ghost and refresh
                 var ghosts = GetComponent<CloneStartEndGhosts>();
-                ghosts.ShowEndGhost = true;
-                if (ghosts != null) ghosts.RefreshGhosts();
+                if (ghosts != null)
+                {
+                    ghosts.ShowEndGhost = true;
+                    ghosts.RefreshGhosts();
+                }
             }
             else
             {
