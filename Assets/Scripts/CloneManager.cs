@@ -365,7 +365,7 @@ public class CloneManager : MonoBehaviour
 
     /// <summary>
     /// Handle retract transition with animation, audio, and player movement.
-    /// Reuses the same transition system as clone creation but with retract-specific effects.
+    /// Moves player to clone's last recorded action position and applies all recorded state.
     /// </summary>
     private IEnumerator PlayRetractTransition(Clone targetClone)
     {
@@ -391,17 +391,45 @@ public class CloneManager : MonoBehaviour
 
             yield return new WaitForSeconds(0.5f); // Wait for animation
 
-            // Move player to target clone's current position
-            if (targetClone != null)
+            // Move player to target clone's last recorded action position and apply all state
+            if (targetClone != null && targetClone.LastAction.HasValue)
             {
+                PlayerAction lastAction = targetClone.LastAction.Value;
+                Vector3 targetPosition = lastAction.position;
+                activePlayer.transform.position = targetPosition;
+                
+                // Apply all the physical state from the last action
+                if (character != null)
+                {
+                    character.SetPhysicsState(targetPosition, lastAction.speed, lastAction.externalForce);
+                    
+                    // Update animator state to match the last action
+                    Animator animator = character.GetComponent<Animator>();
+                    if (animator != null)
+                    {
+                        animator.SetFloat("hSpeed", lastAction.speed.x);
+                        animator.SetFloat("vSpeed", lastAction.speed.y);
+                        animator.SetBool("grounded", lastAction.isGrounded);
+                        animator.SetBool("dashing", lastAction.isDashing);
+                        animator.SetBool("onWall", lastAction.isOnWall);
+                        animator.SetBool("facingRight", lastAction.facingRight);
+                    }
+                }
+                
+                Debug.Log($"Retracted to clone {targetClone.CloneIndex} last action position: {targetPosition} with velocity: {lastAction.speed}");
+            }
+            else if (targetClone != null)
+            {
+                // Fallback to current clone position if no recorded actions
                 Vector3 targetPosition = targetClone.transform.position;
                 activePlayer.transform.position = targetPosition;
                 
-                // Reset physics state at new position
                 if (character != null)
                 {
                     character.SetPhysicsState(targetPosition, Vector2.zero, Vector2.zero);
                 }
+                
+                Debug.LogWarning($"No recorded actions found for clone {targetClone.CloneIndex}, using current position");
             }
 
             // Re-enable player movement

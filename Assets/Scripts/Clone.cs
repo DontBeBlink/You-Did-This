@@ -102,6 +102,13 @@ public class Clone : MonoBehaviour
             }
         }
         
+        // Set up start/end ghost markers
+        CloneStartEndGhosts startEndGhosts = GetComponent<CloneStartEndGhosts>();
+        if (startEndGhosts == null)
+        {
+            startEndGhosts = gameObject.AddComponent<CloneStartEndGhosts>();
+        }
+        
         // Set up particle effects
         if (enableParticleEffects)
         {
@@ -556,6 +563,18 @@ public class Clone : MonoBehaviour
     /// Useful for UI indicators or debugging replay timing.
     /// </summary>
     public float ReplayProgress => replayDuration > 0 ? (Time.time - replayStartTime) / replayDuration : 0f;
+
+    /// <summary>
+    /// Get the first recorded action in the sequence.
+    /// Used for retract system to access starting position and state.
+    /// </summary>
+    public PlayerAction? FirstAction => actionsToReplay != null && actionsToReplay.Count > 0 ? actionsToReplay[0] : null;
+
+    /// <summary>
+    /// Get the last recorded action in the sequence.
+    /// Used for retract system to access final position and state.
+    /// </summary>
+    public PlayerAction? LastAction => actionsToReplay != null && actionsToReplay.Count > 0 ? actionsToReplay[actionsToReplay.Count - 1] : null;
 
     /// <summary>
     /// Cleanup logging when clone is destroyed.
