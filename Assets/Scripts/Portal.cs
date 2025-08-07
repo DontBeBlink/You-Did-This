@@ -129,7 +129,18 @@ public class Portal : MonoBehaviour
         
         // Calculate target position
         Vector3 finalTargetPosition = GetFinalTargetPosition();
-        
+
+        // If using a targetTransform, and it has a Portal script, start cooldown on that portal too
+        if (useTransformAsTarget && targetTransform != null)
+        {
+            Portal targetPortal = targetTransform.GetComponent<Portal>();
+            if (targetPortal != null)
+            {
+                targetPortal.StartPortalCooldown();
+                targetPortal.isOnCooldown = true;
+            }
+        }
+
         // Perform teleportation with transition effects
         if (useTransitionEffects)
         {
@@ -140,18 +151,29 @@ public class Portal : MonoBehaviour
             // Direct teleportation without effects
             TeleportPlayer(player, finalTargetPosition);
         }
-        
+
         // Mark as activated (for one-time portals)
         if (disableAfterUse)
         {
             isActivated = true;
             portalCollider.enabled = false; // Disable the trigger
         }
-        
+
         // Start cooldown timer
         StartCoroutine(CooldownTimer());
-        
+
         Debug.Log($"Portal '{gameObject.name}': Teleported player to {finalTargetPosition}");
+    }
+
+    /// <summary>
+    /// Public method to start the portal's cooldown externally.
+    /// </summary>
+    public void StartPortalCooldown()
+    {
+        if (!isOnCooldown)
+        {
+            StartCoroutine(CooldownTimer());
+        }
     }
     
     /// <summary>
