@@ -118,17 +118,14 @@ public class CloneStartEndGhosts : MonoBehaviour
         if (name == "StartGhost" && parentClone != null && parentClone.StartActionSprite != null)
         {
             spriteToUse = parentClone.StartActionSprite;
-            Debug.Log($"StartGhost using StartActionSprite: {spriteToUse.name}");
         }
         else if (name == "EndGhost" && parentClone != null && parentClone.EndActionSprite != null)
         {
             spriteToUse = parentClone.EndActionSprite;
-            Debug.Log($"EndGhost using EndActionSprite: {spriteToUse.name}");
         }
         if (spriteToUse == null)
         {
             spriteToUse = parentSpriteRenderer.sprite;
-            Debug.Log($"{name} using fallback sprite: {spriteToUse?.name}");
         }
         ghostRenderer.sprite = spriteToUse;
         ghostRenderer.sortingLayerName = parentSpriteRenderer.sortingLayerName;

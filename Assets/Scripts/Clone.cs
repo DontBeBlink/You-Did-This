@@ -220,12 +220,10 @@ public class Clone : MonoBehaviour
         if (originalPlayerSprite != null)
         {
             startActionSprite = originalPlayerSprite;
-            Debug.Log($"Clone {index}: Set startActionSprite from original player: {startActionSprite.name}");
         }
         else if (spriteRenderer != null)
         {
             startActionSprite = spriteRenderer.sprite;
-            Debug.Log($"Clone {index}: Set startActionSprite from current sprite: {startActionSprite?.name}");
         }
 
         // Disable player input components to prevent interference with replay
@@ -383,7 +381,6 @@ public class Clone : MonoBehaviour
                 if (endActionSprite == null && spriteRenderer != null)
                 {
                     endActionSprite = spriteRenderer.sprite;
-                    Debug.Log($"Clone {cloneIndex}: Set endActionSprite: {endActionSprite?.name}");
                 }
                 ExecuteAction(actionsToReplay[currentActionIndex]);
                 
