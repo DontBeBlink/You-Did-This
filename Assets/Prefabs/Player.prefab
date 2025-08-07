@@ -342,7 +342,7 @@ MonoBehaviour:
   owPlatformDelay: 0.1
   ladderClimbThreshold: 0.3
   ladderDelay: 0.3
-  maxSlopeAngle: 60
+  maxSlopeAngle: 45
   minWallAngle: 80
   speed: {x: 0, y: 0}
   externalForce: {x: 0, y: 0}
@@ -473,11 +473,11 @@ MonoBehaviour:
   wallJumpSound: {fileID: 8300000, guid: c82ac82b36792ff458daf24382887ca4, type: 3}
   dashVolume: 0.7
   wallSlideVolume: 0.4
+  wallSlideSoundInterval: 0.5
   wallJumpVolume: 0.8
   pitchVariation: 0.1
   use3DAudio: 1
   spatialBlend: 0.8
-  wallSlideSoundInterval: 0.5
 --- !u!1 &7662770109407060711
 GameObject:
   m_ObjectHideFlags: 0

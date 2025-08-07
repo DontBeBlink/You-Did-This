@@ -1,0 +1,11 @@
+{
+    "asset": "44ee40b07dd9dac4cb2f27770a3697b0",
+    "fileName": "01987e8f-39c8-772d-85b8-64e0fec9dc12_Preview.png",
+    "prompt": "bloom effect material for CloneManager and its children",
+    "negativePrompt": "",
+    "model": "575ecf67-4425-4939-97b9-5e138b8ee234",
+    "modelName": "Unity Texture2D",
+    "customSeed": 191105671,
+    "w3CTraceId": "1e6e3a07333dccae0cbbd4266cc2658c",
+    "refinementMode": "Generation"
+}
