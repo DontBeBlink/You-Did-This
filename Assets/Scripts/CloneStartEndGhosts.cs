@@ -52,8 +52,6 @@ public class CloneStartEndGhosts : MonoBehaviour
         if (!isInitialized || parentClone == null || parentSpriteRenderer == null)
             return;
 
-        // Wait a frame to ensure clone is fully initialized
-       // Invoke(nameof(CreateStartEndGhosts), 0.1f);
     }
 
     /// <summary>
@@ -113,20 +111,34 @@ public class CloneStartEndGhosts : MonoBehaviour
 
         // Copy sprite renderer
         SpriteRenderer ghostRenderer = ghostObject.AddComponent<SpriteRenderer>();
-        // Use the stored sprite from the clone if available (for start/end), otherwise fallback to parent's sprite
         Sprite spriteToUse = null;
-        if (name == "StartGhost" && parentClone != null && parentClone.StartActionSprite != null)
+
+        if (name == "StartGhost" && parentClone != null)
         {
             spriteToUse = parentClone.StartActionSprite;
+            // Only create if we have a valid sprite
+            if (spriteToUse == null)
+            {
+                //Destroy(ghostObject);
+                return null;
+            }
         }
-        else if (name == "EndGhost" && parentClone != null && parentClone.EndActionSprite != null)
+        else if (name == "EndGhost" && parentClone != null)
         {
             spriteToUse = parentClone.EndActionSprite;
+            // Only create if we have a valid sprite
+            if (spriteToUse == null)
+            {
+                //Destroy(ghostObject);
+                return null;
+            }
         }
-        if (spriteToUse == null)
+        else
         {
+            // For any other ghosts, fallback to parent's current sprite
             spriteToUse = parentSpriteRenderer.sprite;
         }
+
         ghostRenderer.sprite = spriteToUse;
         ghostRenderer.sortingLayerName = parentSpriteRenderer.sortingLayerName;
         ghostRenderer.sortingOrder = parentSpriteRenderer.sortingOrder - 2; // Render behind clone and trail ghosts

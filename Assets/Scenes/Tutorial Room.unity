@@ -113719,7 +113719,7 @@ MonoBehaviour:
   recordingVolume: {fileID: 52054018}
   clonePrefab: {fileID: 41342835647678644, guid: e6d8430383b7ad44692639431d7cea7c,
     type: 3}
-  cloneCreateSound: {fileID: 8300000, guid: 9a90b6d40fed7ea439ac0a5aadba4fac, type: 3}
+  cloneCreateSound: {fileID: 0}
 --- !u!4 &2056383803
 Transform:
   m_ObjectHideFlags: 0

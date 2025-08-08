@@ -371,9 +371,9 @@ public class Clone : MonoBehaviour
                 // For first action, just execute (startActionSprite should already be set in InitializeClone)
                 ExecuteAction(actionsToReplay[currentActionIndex]);
                 
-                // Notify ghost script to refresh after setting sprite
-                var ghosts = GetComponent<CloneStartEndGhosts>();
-                if (ghosts != null) ghosts.RefreshGhosts();
+                // Removed RefreshGhosts() call from replay loop; will be called once at initialization.
+                // (See Start() method for new location.)
+                
             }
             else if (currentActionIndex == actionsToReplay.Count - 1)
             {
