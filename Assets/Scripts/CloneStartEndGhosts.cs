@@ -11,9 +11,9 @@ public class CloneStartEndGhosts : MonoBehaviour
     [SerializeField] private Color startGhostColor = Color.lightCyan;    // Color for start position ghost
     [SerializeField] private Color endGhostColor = Color.darkCyan;       // Color for end position ghost
     [SerializeField] private float ghostAlpha = 0.4f;              // Alpha for start/end ghosts (more visible than trail)
-    [SerializeField] private float ghostScale = 1f;              // Scale multiplier for start/end ghosts
+    [SerializeField] private float ghostScale = 4f;              // Scale multiplier for start/end ghosts
     [SerializeField] private bool showStartGhost = true;            // Whether to show start position ghost
-    [SerializeField] private bool showEndGhost = false;              // Whether to show end position ghost
+    [SerializeField] private bool showEndGhost = true;              // Whether to show end position ghost
 
     public bool ShowStartGhost
     {
@@ -40,7 +40,18 @@ public class CloneStartEndGhosts : MonoBehaviour
     private void Awake()
     {
         parentClone = GetComponent<Clone>();
-        parentSpriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        // Find the child named "Sprite" and get its SpriteRenderer
+        var spriteChild = transform.Find("Sprite");
+        if (spriteChild != null)
+        {
+            parentSpriteRenderer = spriteChild.GetComponent<SpriteRenderer>();
+            Debug.Log($"[Ghosts] Found SpriteRenderer on child 'Sprite' for clone {parentClone?.CloneIndex}");
+        }
+        else
+        {
+            parentSpriteRenderer = null;
+            Debug.LogWarning($"[Ghosts] Could not find child 'Sprite' for clone {parentClone?.CloneIndex}");
+        }
         isInitialized = true;
     }
 
@@ -51,6 +62,9 @@ public class CloneStartEndGhosts : MonoBehaviour
     {
         if (!isInitialized || parentClone == null || parentSpriteRenderer == null)
             return;
+
+        // Ensure ghosts are created at startup if possible
+    // Do not call RefreshGhosts here; wait until sprites are available
 
     }
 
@@ -94,15 +108,23 @@ public class CloneStartEndGhosts : MonoBehaviour
     /// <returns>The created ghost GameObject</returns>
     private GameObject CreateGhostMarker(PlayerAction action, Color color, string name, bool facingRight)
     {
-        if (parentSpriteRenderer == null) return null;
+        if (parentSpriteRenderer == null)
+        {
+            Debug.LogWarning($"[Ghosts] parentSpriteRenderer is null in CreateGhostMarker for {name}");
+            return null;
+        }
 
         // Create ghost GameObject
         GameObject ghostObject = new GameObject($"Clone_{parentClone.CloneIndex}_{name}");
-        ghostObject.transform.position = action.position;
-        ghostObject.transform.rotation = parentSpriteRenderer.transform.rotation;
+        // Do NOT parent to the clone or its Sprite child
+        ghostObject.transform.parent = null; // World space
 
-        // Set scale and direction
-        Vector3 scale = parentSpriteRenderer.transform.localScale * ghostScale;
+        // Set world position and rotation
+        ghostObject.transform.position = action.position;
+        ghostObject.transform.rotation = Quaternion.identity;
+
+        // Set scale and direction (independent of parent)
+        Vector3 scale = parentSpriteRenderer.transform.localScale;
         if (!facingRight)
             scale.x = -Mathf.Abs(scale.x);
         else
@@ -116,32 +138,31 @@ public class CloneStartEndGhosts : MonoBehaviour
         if (name == "StartGhost" && parentClone != null)
         {
             spriteToUse = parentClone.StartActionSprite;
-            // Only create if we have a valid sprite
             if (spriteToUse == null)
             {
-                //Destroy(ghostObject);
+                Debug.LogWarning($"[Ghosts] StartActionSprite is null for clone {parentClone.CloneIndex}, destroying start ghost");
+                Destroy(ghostObject);
                 return null;
             }
         }
         else if (name == "EndGhost" && parentClone != null)
         {
             spriteToUse = parentClone.EndActionSprite;
-            // Only create if we have a valid sprite
             if (spriteToUse == null)
             {
-                //Destroy(ghostObject);
+                Debug.LogWarning($"[Ghosts] EndActionSprite is null for clone {parentClone.CloneIndex}, destroying end ghost");
+                Destroy(ghostObject);
                 return null;
             }
         }
         else
         {
-            // For any other ghosts, fallback to parent's current sprite
             spriteToUse = parentSpriteRenderer.sprite;
         }
 
         ghostRenderer.sprite = spriteToUse;
         ghostRenderer.sortingLayerName = parentSpriteRenderer.sortingLayerName;
-        ghostRenderer.sortingOrder = parentSpriteRenderer.sortingOrder - 2; // Render behind clone and trail ghosts
+        ghostRenderer.sortingOrder = parentSpriteRenderer.sortingOrder - 2;
         ghostRenderer.material = parentSpriteRenderer.material;
 
         // Set ghost color
@@ -149,9 +170,9 @@ public class CloneStartEndGhosts : MonoBehaviour
         ghostColor.a = ghostAlpha;
         ghostRenderer.color = ghostColor;
 
-        // Add a subtle pulsing effect to make it more noticeable
-        GhostPulse pulseEffect = ghostObject.AddComponent<GhostPulse>();
-        pulseEffect.Initialize(ghostColor, 1.0f, 0.3f); // Slow pulse
+        // Optional: Add a subtle pulsing effect
+        // GhostPulse pulseEffect = ghostObject.AddComponent<GhostPulse>();
+        // pulseEffect.Initialize(ghostColor, 1.0f, 0.3f);
 
         return ghostObject;
     }
@@ -162,6 +183,18 @@ public class CloneStartEndGhosts : MonoBehaviour
     private void Update()
     {
         if (!isInitialized || parentClone == null) return;
+
+        // Only create ghosts if the sprite is now available and the ghost is missing
+        if (showStartGhost && startGhost == null && parentClone.StartActionSprite != null)
+        {
+            Debug.Log($"[Ghosts] Creating start ghost for clone {parentClone.CloneIndex}");
+            RefreshGhosts();
+        }
+        if (showEndGhost && endGhost == null && parentClone.EndActionSprite != null)
+        {
+            Debug.Log($"[Ghosts] Creating end ghost for clone {parentClone.CloneIndex}");
+            RefreshGhosts();
+        }
 
         // Update ghost colors based on clone state
         if (parentClone.IsStuck)

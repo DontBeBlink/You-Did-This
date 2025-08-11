@@ -113,6 +113,7 @@ GameObject:
   - component: {fileID: 1674405824665072548}
   - component: {fileID: 4732753124547771545}
   - component: {fileID: 1874531090548873653}
+  - component: {fileID: 8586473606005374173}
   m_Layer: 11
   m_Name: Clones
   m_TagString: Untagged
@@ -481,6 +482,7 @@ MonoBehaviour:
   wallJumpSound: {fileID: 0}
   dashVolume: 0.7
   wallSlideVolume: 0.4
+  wallSlideSoundInterval: 0.5
   wallJumpVolume: 0.8
   pitchVariation: 0.1
   use3DAudio: 1
@@ -569,6 +571,24 @@ MonoBehaviour:
   despawnVolume: 0.2
   stuckVolume: 0.4
   pitchVariation: 0.2
+--- !u!114 &8586473606005374173
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 41342835647678644}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebe5ab0c7a493cc4e963f8d174390fc3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CloneStartEndGhosts
+  startGhostColor: {r: 0.8784314, g: 1, b: 1, a: 1}
+  endGhostColor: {r: 0, g: 0.5450981, b: 0.5450981, a: 1}
+  ghostAlpha: 0.4
+  ghostScale: 1
+  showStartGhost: 1
+  showEndGhost: 1
 --- !u!1 &755602812220207599
 GameObject:
   m_ObjectHideFlags: 0
