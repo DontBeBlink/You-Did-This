@@ -36,6 +36,10 @@ public class CloneManager : MonoBehaviour
     [Header("Audio")]
     [SerializeField] private AudioClip cloneCreateSound;
 
+    [Header("Retract Settings")]
+    [SerializeField] private bool retractToFirstPosition = false; // If true, retract moves to clone's first position; else last
+    [SerializeField] private Key retractKey = Key.Z; // Adjustable retract key
+
     // Core system references
     private List<Clone> allClones = new List<Clone>();
     private PlayerController activePlayer;
@@ -47,6 +51,7 @@ public class CloneManager : MonoBehaviour
     private bool isRecording = false;
     private int nextCloneIndex = 0;
     private bool isProcessingLoop = false;
+    private Sprite recordingStartSprite = null; // Store sprite when recording starts
 
     // Camera zoom state
     private float originalOrthoSize;
@@ -105,6 +110,7 @@ public class CloneManager : MonoBehaviour
     {
         HandleInput();
         UpdateAutoLoopTiming();
+        HandleRetractInput(); // Add this line
     }
 
     #endregion
@@ -141,6 +147,21 @@ public class CloneManager : MonoBehaviour
         else
         {
             StartCoroutine(EndCurrentLoop());
+        }
+    }
+
+    /// <summary>
+    /// Handle retract input to move player to the last non-stuck clone.
+    /// </summary>
+    private void HandleRetractInput()
+    {
+        if (Keyboard.current[retractKey].wasPressedThisFrame)
+        {
+            bool retracted = RetractToLastClone();
+            if (!retracted)
+            {
+                Debug.Log("Cannot retract: No clones available or only stuck clones remain");
+            }
         }
     }
 
@@ -188,6 +209,8 @@ public class CloneManager : MonoBehaviour
     // For Master of Time mode, start recording immediately AND play transition
     if (masterOfTimeMode && actionRecorder != null)
     {
+        // Capture the sprite when recording starts
+        CaptureRecordingStartSprite();
         actionRecorder.StartRecording();
         // Still play transition but don't wait for it to complete
         StartCoroutine(PlayTransitionEffects(true));
@@ -207,7 +230,26 @@ public class CloneManager : MonoBehaviour
         yield return StartCoroutine(PlayTransitionEffects(true));
         
         if (actionRecorder != null)
+        {
+            // Capture the sprite when recording starts
+            CaptureRecordingStartSprite();
             actionRecorder.StartRecording();
+        }
+    }
+
+    /// <summary>
+    /// Capture the player's sprite when recording starts for accurate start ghost markers.
+    /// </summary>
+    private void CaptureRecordingStartSprite()
+    {
+        if (activePlayer != null)
+        {
+            SpriteRenderer playerSpriteRenderer = activePlayer.GetComponent<SpriteRenderer>();
+            if (playerSpriteRenderer != null)
+            {
+                recordingStartSprite = playerSpriteRenderer.sprite;
+            }
+        }
     }
 
     #endregion
@@ -363,59 +405,6 @@ public class CloneManager : MonoBehaviour
             yield return new WaitForSeconds(0.5f);
     }
 
-    /// <summary>
-    /// Handle retract transition with animation, audio, and player movement.
-    /// Reuses the same transition system as clone creation but with retract-specific effects.
-    /// </summary>
-    private IEnumerator PlayRetractTransition(Clone targetClone)
-    {
-        if (activePlayer != null)
-        {
-            // Trigger retract animation and immobilize player briefly
-            Animator playerAnimator = activePlayer.GetComponent<Animator>();
-            if (playerAnimator != null)
-                playerAnimator.SetTrigger("pickup"); // Reuse pickup animation for retract
-
-            CharacterController2D character = activePlayer.GetComponent<CharacterController2D>();
-            if (character != null)
-            {
-                character.Immobile = true;
-                character.SetPhysicsState(character.transform.position, Vector2.zero, Vector2.zero);
-            }
-
-            // Play retract sound
-            if (AudioManager.Instance != null)
-            {
-                AudioManager.Instance.PlayRetractSound();
-            }
-
-            yield return new WaitForSeconds(0.5f); // Wait for animation
-
-            // Move player to target clone's current position
-            if (targetClone != null)
-            {
-                Vector3 targetPosition = targetClone.transform.position;
-                activePlayer.transform.position = targetPosition;
-                
-                // Reset physics state at new position
-                if (character != null)
-                {
-                    character.SetPhysicsState(targetPosition, Vector2.zero, Vector2.zero);
-                }
-            }
-
-            // Re-enable player movement
-            if (character != null)
-                character.Immobile = false;
-        }
-
-        // Wait for any fade effects
-        if (cameraController != null)
-            yield return new WaitForSeconds(cameraController.fadeOutDuration);
-        else
-            yield return new WaitForSeconds(0.3f);
-    }
-
     #endregion
 
     #region Camera Zoom Effects
@@ -540,9 +529,11 @@ public class CloneManager : MonoBehaviour
         if (clone == null)
             clone = cloneObject.AddComponent<Clone>();
 
-        // Initialize clone with recorded actions
+        // Initialize clone with recorded actions and original player sprite
         List<PlayerAction> recordedActions = actionRecorder.GetRecordedActions();
-        clone.InitializeClone(recordedActions, nextCloneIndex++);
+        
+        // Use the sprite that was captured when recording started
+        clone.InitializeClone(recordedActions, nextCloneIndex++, recordingStartSprite);
         allClones.Add(clone);
         clone.StartReplay();
 
@@ -644,23 +635,110 @@ public class CloneManager : MonoBehaviour
         // Stop current recording if active
         if (actionRecorder != null && actionRecorder.IsRecording)
             actionRecorder.StopRecording();
-        
+
         isRecording = false;
-        
+
         // Play retract transition effects
         yield return StartCoroutine(PlayRetractTransition(targetClone));
-        
+
         // Remove newer clones
         for (int i = allClones.Count - 1; i >= 0; i--)
         {
-            if (allClones[i].CloneIndex > targetClone.CloneIndex)
+            if (allClones[i].CloneIndex > targetClone.CloneIndex - 1)
             {
                 Destroy(allClones[i].gameObject);
                 allClones.RemoveAt(i);
             }
         }
-        
+
         Debug.Log($"Retracted to clone {targetClone.CloneIndex}");
+    }
+
+    /// <summary>
+    /// Handle visual transition, audio, and player movement for retract.
+    /// Moves player to clone's first or last recorded action position based on setting.
+    /// </summary>
+    private IEnumerator PlayRetractTransition(Clone targetClone)
+    {
+        if (activePlayer != null)
+        {
+            // Trigger retract animation and immobilize player briefly
+            Animator playerAnimator = activePlayer.GetComponent<Animator>();
+            if (playerAnimator != null)
+                playerAnimator.SetTrigger("pickup"); // Reuse pickup animation for retract
+
+            CharacterController2D character = activePlayer.GetComponent<CharacterController2D>();
+            if (character != null)
+            {
+                character.Immobile = true;
+                character.SetPhysicsState(character.transform.position, Vector2.zero, Vector2.zero);
+            }
+
+            // Play retract sound
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlayRetractSound();
+            }
+
+            yield return new WaitForSeconds(0.5f); // Wait for animation
+
+            // Move player to target clone's first or last recorded action position and apply all state
+            PlayerAction? action = null;
+            if (targetClone != null)
+            {
+                action = retractToFirstPosition ? targetClone.FirstAction : targetClone.LastAction;
+            }
+
+            if (targetClone != null && action.HasValue)
+            {
+                PlayerAction chosenAction = action.Value;
+                Vector3 targetPosition = chosenAction.position;
+                activePlayer.transform.position = targetPosition;
+
+                // Apply all the physical state from the chosen action
+                if (character != null)
+                {
+                    character.SetPhysicsState(targetPosition, chosenAction.speed, chosenAction.externalForce);
+
+                    // Update animator state to match the chosen action
+                    Animator animator = character.GetComponent<Animator>();
+                    if (animator != null)
+                    {
+                        animator.SetFloat("hSpeed", chosenAction.speed.x);
+                        animator.SetFloat("vSpeed", chosenAction.speed.y);
+                        animator.SetBool("grounded", chosenAction.isGrounded);
+                        animator.SetBool("dashing", chosenAction.isDashing);
+                        animator.SetBool("onWall", chosenAction.isOnWall);
+                        animator.SetBool("facingRight", chosenAction.facingRight);
+                    }
+                }
+
+                Debug.Log($"Retracted to clone {targetClone.CloneIndex} {(retractToFirstPosition ? "first" : "last")} action position: {targetPosition} with velocity: {chosenAction.speed}");
+            }
+            else if (targetClone != null)
+            {
+                // Fallback to current clone position if no recorded actions
+                Vector3 targetPosition = targetClone.transform.position;
+                activePlayer.transform.position = targetPosition;
+
+                if (character != null)
+                {
+                    character.SetPhysicsState(targetPosition, Vector2.zero, Vector2.zero);
+                }
+
+                Debug.LogWarning($"No recorded actions found for clone {targetClone.CloneIndex}, using current position");
+            }
+
+            // Re-enable player movement
+            if (character != null)
+                character.Immobile = false;
+        }
+
+        // Wait for any fade effects
+        if (cameraController != null)
+            yield return new WaitForSeconds(cameraController.fadeOutDuration);
+        else
+            yield return new WaitForSeconds(0.3f);
     }
 
     #endregion

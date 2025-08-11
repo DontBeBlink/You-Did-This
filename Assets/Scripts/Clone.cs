@@ -6,9 +6,12 @@ using UnityEngine;
 /// Each clone represents a "ghost" of the player's previous actions, faithfully reproducing
 /// movement, input timing, and interactions to serve as puzzle elements.
 /// </summary>
-[RequireComponent(typeof(CharacterController2D))]
+ [RequireComponent(typeof(CharacterController2D))]
 public class Clone : MonoBehaviour
 {
+    // Store the sprite at the first and last action for accurate start/end ghost visuals
+    private Sprite startActionSprite = null;
+    private Sprite endActionSprite = null;
     [Header("Clone Settings")]
     [SerializeField] private Material cloneMaterial;           // Optional custom material for clone appearance
     [SerializeField] private Color cloneColor = Color.cyan;    // Base color for active clones
@@ -56,7 +59,27 @@ public class Clone : MonoBehaviour
         // Get required components for clone functionality
         character = GetComponent<CharacterController2D>();
         interact = GetComponent<InteractSystem>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
+
+        // Get the SpriteRenderer from the child named "Sprite"
+        var spriteChild = transform.Find("Sprite");
+        if (spriteChild != null)
+        {
+            spriteRenderer = spriteChild.GetComponent<SpriteRenderer>();
+            Debug.Log($"[Clone] Found SpriteRenderer on child 'Sprite' for clone {cloneIndex}");
+        }
+        else
+        {
+            spriteRenderer = null;
+            Debug.LogWarning($"[Clone] Could not find child 'Sprite' for clone {cloneIndex}");
+        }
+
+        // After setup, if we have a sprite, create the start ghost immediately
+        if (startActionSprite == null && spriteRenderer != null)
+        {
+            startActionSprite = spriteRenderer.sprite;
+            var ghosts = GetComponent<CloneStartEndGhosts>();
+            if (ghosts != null) ghosts.RefreshGhosts();
+        }
 
         SetupCloneVisuals();
         SetupVisualEffects();
@@ -100,6 +123,13 @@ public class Clone : MonoBehaviour
                 // Add our GhostTrail component (no longer requires TrailRenderer)
                 ghostTrail = gameObject.AddComponent<GhostTrail>();
             }
+        }
+        
+        // Set up start/end ghost markers
+        CloneStartEndGhosts startEndGhosts = GetComponent<CloneStartEndGhosts>();
+        if (startEndGhosts == null)
+        {
+            startEndGhosts = gameObject.AddComponent<CloneStartEndGhosts>();
         }
         
         // Set up particle effects
@@ -187,7 +217,8 @@ public class Clone : MonoBehaviour
     /// </summary>
     /// <param name="actions">Sequence of PlayerActions to replay</param>
     /// <param name="index">Unique identifier for this clone</param>
-    public void InitializeClone(List<PlayerAction> actions, int index)
+    /// <param name="originalPlayerSprite">The sprite from the original player when recording started</param>
+    public void InitializeClone(List<PlayerAction> actions, int index, Sprite originalPlayerSprite = null)
     {
         // Validate and store the action sequence
         if (actions == null || actions.Count == 0)
@@ -203,6 +234,24 @@ public class Clone : MonoBehaviour
         cloneIndex = index;
         // Calculate total replay duration from the last action's timestamp
         replayDuration = actionsToReplay.Count > 0 ? actionsToReplay[actionsToReplay.Count - 1].timestamp : 0f;
+
+        // Get the SpriteRenderer from the child named "Sprite"
+        var spriteChild = transform.Find("Sprite");
+        if (spriteChild != null)
+        {
+            spriteRenderer = spriteChild.GetComponent<SpriteRenderer>();
+        }
+
+        // Capture the start sprite from the original player if provided, otherwise use current sprite
+        // This represents the sprite state when recording began
+        if (originalPlayerSprite != null)
+        {
+            startActionSprite = originalPlayerSprite;
+        }
+        else if (spriteRenderer != null)
+        {
+            startActionSprite = spriteRenderer.sprite;
+        }
 
         // Disable player input components to prevent interference with replay
         PlayerController playerController = GetComponent<PlayerController>();
@@ -266,6 +315,8 @@ public class Clone : MonoBehaviour
         currentActionIndex = 0;
         wasJumpHeld = false; // Reset jump held state for clean start
         
+        // Note: startActionSprite should already be set in InitializeClone
+        
         // Trigger visual effects
         if (particleEffects != null)
         {
@@ -325,7 +376,11 @@ public class Clone : MonoBehaviour
                 wasJumpHeld = false; // Reset jump state for clean loop restart
                 // Reset position to where the replay started for loop consistency
                 if (actionsToReplay != null && actionsToReplay.Count > 0)
+                {
                     this.transform.position = actionsToReplay[0].position;
+                    
+                    // Note: startActionSprite should already be set in InitializeClone
+                }
                 lastActionReplayed = null;
             }
             return;
@@ -337,7 +392,24 @@ public class Clone : MonoBehaviour
         while (currentActionIndex < actionsToReplay.Count &&
                actionsToReplay[currentActionIndex].timestamp <= currentReplayTime)
         {
-            ExecuteAction(actionsToReplay[currentActionIndex]);
+            if (currentActionIndex == 0 && startActionSprite == null && spriteRenderer != null)
+            {
+                startActionSprite = spriteRenderer.sprite;
+                Debug.Log($"[Clone] Set StartActionSprite for clone {cloneIndex}");
+                var ghosts = GetComponent<CloneStartEndGhosts>();
+                if (ghosts != null) ghosts.RefreshGhosts();
+            }
+            else if (currentActionIndex == actionsToReplay.Count - 1 && endActionSprite == null && spriteRenderer != null)
+            {
+                endActionSprite = spriteRenderer.sprite;
+                Debug.Log($"[Clone] Set EndActionSprite for clone {cloneIndex}");
+                var ghosts = GetComponent<CloneStartEndGhosts>();
+                if (ghosts != null) ghosts.RefreshGhosts();
+            }
+            else
+            {
+                ExecuteAction(actionsToReplay[currentActionIndex]);
+            }
             lastActionReplayed = actionsToReplay[currentActionIndex];
             currentActionIndex++;
         }
@@ -556,6 +628,29 @@ public class Clone : MonoBehaviour
     /// Useful for UI indicators or debugging replay timing.
     /// </summary>
     public float ReplayProgress => replayDuration > 0 ? (Time.time - replayStartTime) / replayDuration : 0f;
+
+    /// <summary>
+    /// Get the first recorded action in the sequence.
+    /// Used for retract system to access starting position and state.
+    /// </summary>
+    public PlayerAction? FirstAction => actionsToReplay != null && actionsToReplay.Count > 0 ? actionsToReplay[0] : null;
+
+    /// <summary>
+    /// Sprite at the first recorded action (for start ghost marker)
+    /// </summary>
+    public Sprite StartActionSprite => startActionSprite;
+
+
+    /// <summary>
+    /// Get the last recorded action in the sequence.
+    /// Used for retract system to access final position and state.
+    /// </summary>
+    public PlayerAction? LastAction => actionsToReplay != null && actionsToReplay.Count > 0 ? actionsToReplay[actionsToReplay.Count - 1] : null;
+
+    /// <summary>
+    /// Sprite at the last recorded action (for end ghost marker)
+    /// </summary>
+    public Sprite EndActionSprite => endActionSprite;
 
     /// <summary>
     /// Cleanup logging when clone is destroyed.
