@@ -195,7 +195,12 @@ namespace GMTK2025.AudioManagement.Examples
             if (masterVolumeSlider != null) return; // Don't show debug GUI if UI is set up
 
             GUILayout.BeginArea(new Rect(10, 10, 300, 400));
+            GUILayout.BeginArea(new Rect(10, 10, 300, 400));
+#if UNITY_EDITOR
             GUILayout.Label("Audio Management System Example", EditorGUIUtility.isProSkin ? GUI.skin.box : GUI.skin.label);
+#else
+            GUILayout.Label("Audio Management System Example", GUI.skin.label);
+#endif
             GUILayout.Space(10);
 
             if (AudioManager.Instance == null)
