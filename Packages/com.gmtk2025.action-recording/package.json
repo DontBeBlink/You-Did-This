@@ -1,0 +1,31 @@
+{
+  "name": "com.gmtk2025.action-recording",
+  "displayName": "Action Recording System",
+  "version": "1.0.0",
+  "unity": "2022.3",
+  "description": "A physics-perfect action recording and replay system for Unity. Originally developed for GMTK2025, this system enables time-loop mechanics, ghost players, AI behavior recording, and precise action replay with frame-perfect timing.",
+  "keywords": [
+    "action-recording",
+    "replay-system", 
+    "time-loop",
+    "ghost-player",
+    "clone-system",
+    "physics-perfect",
+    "GMTK2025"
+  ],
+  "author": {
+    "name": "GMTK2025 Team",
+    "url": "https://github.com/DontBeBlink/GMTK2025"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "com.unity.inputsystem": "1.5.0"
+  },
+  "samples": [
+    {
+      "displayName": "Basic Action Recording Example",
+      "description": "A simple example showing how to set up action recording and clone replay in your scene.",
+      "path": "Samples~/BasicExample"
+    }
+  ]
+}

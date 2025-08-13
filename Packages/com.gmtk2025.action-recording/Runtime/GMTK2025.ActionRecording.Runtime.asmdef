@@ -1,0 +1,16 @@
+{
+    "name": "GMTK2025.ActionRecording.Runtime",
+    "rootNamespace": "GMTK2025.ActionRecording",
+    "references": [
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,14 @@
+{
+    "name": "GMTK2025.InteractionSystem.Runtime",
+    "rootNamespace": "GMTK2025.InteractionSystem",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
