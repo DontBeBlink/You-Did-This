@@ -1,6 +1,6 @@
 # You Did This
 
-A puzzle platformer where players create "clones" to solve spatial and timing puzzles. Each clone repeats the player's previous actions, acting as both the key to progress and potentially an obstacle [...]
+A puzzle platformer where players create "clones" to solve spatial and timing puzzles. Each clone repeats the player's previous actions, acting as both the key to progress and potentially an obstacle
 
 🎮 A solo dev project by blink - showcasing reusable game systems and mechanics
 
