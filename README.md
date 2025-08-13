@@ -84,7 +84,7 @@ Navigate through puzzle levels by strategically creating clones of yourself. Eac
 For a comprehensive setup checklist and testing guide, see [QUICK_START.md](QUICK_START.md).
 
 ### Clone System Setup
-The clone system auto-configures when you add a `CloneManager` component to any GameObject in your scene. See [CLONE_SYSTEM_SETUP.md](CLONE_SYSTEM_SETUP.md) for detailed configuration options.
+The clone system auto-configures when you add a `CloneManager` component to any GameObject in your scene. See [docs/technical/CLONE_SYSTEM_SETUP.md](docs/technical/CLONE_SYSTEM_SETUP.md) for detailed configuration options.
 
 ## 📁 Project Structure
 
@@ -115,7 +115,7 @@ The game follows a core loop of:
 5. **Reach Goals** to make clones permanent puzzle elements
 6. **Iterate** using retraction to undo and refine solutions
 
-See [GDD_YouDidThis.md](GDD_YouDidThis.md) for the complete game design document.
+See [docs/design/GDD_YouDidThis.md](docs/design/GDD_YouDidThis.md) for the complete game design document.
 
 ## 🛠️ For Developers
 
@@ -134,16 +134,26 @@ For technical questions or suggestions about the game systems, feel free to open
 
 ### Level Design
 For developers interested in learning from or building upon these systems:
-- **[Level Design Guide](LEVEL_DESIGN.md)**: Comprehensive guide to creating levels using the existing systems
-- **[Puzzle Ideas](PUZZLE_IDEAS.md)**: Detailed puzzle concepts, room layouts, and implementation plans
-- **[Example Scene Template](EXAMPLE_SCENE_TEMPLATE.md)**: Step-by-step tutorial for creating a basic puzzle scene
+- **[Level Design Guide](docs/design/LEVEL_DESIGN.md)**: Comprehensive guide to creating levels using the existing systems
+- **[Puzzle Ideas](docs/design/PUZZLE_IDEAS.md)**: Detailed puzzle concepts, room layouts, and implementation plans
+- **[Example Scene Template](docs/design/EXAMPLE_SCENE_TEMPLATE.md)**: Step-by-step tutorial for creating a basic puzzle scene
 - All guides cover the trigger system, logic gates, goals, and step-by-step creation workflows
 
 ### Technical Architecture
-For detailed technical documentation about the game's systems and architecture, see [ARCHITECTURE.md](ARCHITECTURE.md).
+For detailed technical documentation about the game's systems and architecture, see [docs/technical/ARCHITECTURE.md](docs/technical/ARCHITECTURE.md).
 
 ### Building the Game
-To create builds for distribution or testing, see our [BUILD.md](BUILD.md) guide with platform-specific instructions.
+To create builds for distribution or testing, see our [docs/technical/BUILD.md](docs/technical/BUILD.md) guide with platform-specific instructions.
+
+## 📚 Documentation
+
+All detailed documentation has been organized in the [`docs/`](docs/) folder:
+
+- **📋 [Planning](docs/planning/)** - System extraction and project planning documents
+- **🎮 [Design](docs/design/)** - Game design and level creation guides  
+- **🔧 [Technical](docs/technical/)** - Technical implementation and setup guides
+
+See the [Documentation Index](docs/README.md) for a complete overview.
 
 ## 📝 Development Status
 
