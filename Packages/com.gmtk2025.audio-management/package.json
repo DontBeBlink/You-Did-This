@@ -1,0 +1,28 @@
+{
+  "name": "com.gmtk2025.audio-management",
+  "displayName": "Audio Management System",
+  "version": "1.0.0",
+  "unity": "2022.3",
+  "description": "A comprehensive singleton-based audio management system for Unity. Originally developed for GMTK2025, this system provides centralized audio control with volume management, sound categorization, and cross-scene persistence.",
+  "keywords": [
+    "audio",
+    "sound-management",
+    "singleton",
+    "volume-control",
+    "audio-effects",
+    "GMTK2025"
+  ],
+  "author": {
+    "name": "GMTK2025 Team",
+    "url": "https://github.com/DontBeBlink/GMTK2025"
+  },
+  "license": "MIT",
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "Basic Audio Management Example",
+      "description": "A simple example showing how to set up and use the audio management system in your project.",
+      "path": "Samples~/BasicExample"
+    }
+  ]
+}
