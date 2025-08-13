@@ -1,6 +1,6 @@
 # Action Recording System
 
-A physics-perfect action recording and replay system for Unity, originally developed for GMTK2025. This system enables time-loop mechanics, ghost players, AI behavior recording, and precise action replay with frame-perfect timing.
+A physics-perfect action recording and replay system for Unity, originally developed for You Did This. This system enables time-loop mechanics, ghost players, AI behavior recording, and precise action replay with frame-perfect timing.
 
 ## 🎯 Features
 

@@ -1,6 +1,6 @@
 # Interaction System
 
-A comprehensive object interaction system for Unity featuring proximity detection, visual feedback, pickup mechanics, and input device icon support. Originally developed for GMTK2025, this system enables rich character-object interactions for puzzles and gameplay.
+A comprehensive object interaction system for Unity featuring proximity detection, visual feedback, pickup mechanics, and input device icon support. Originally developed for You Did This, this system enables rich character-object interactions for puzzles and gameplay.
 
 ## 🎯 Features
 

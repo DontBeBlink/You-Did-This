@@ -51,7 +51,7 @@ A puzzle platformer where players create "clones" to solve spatial and timing pu
 
 ---
 
-## 🚀 Implementation Status (GMTK Game Jam 2025)
+## 🚀 Implementation Status (Solo Dev Showcase)
 
 ### ✅ Fully Implemented Features
 
@@ -80,7 +80,7 @@ A puzzle platformer where players create "clones" to solve spatial and timing pu
 - Visual clone differentiation (color, transparency)
 - Scene management and level progression
 
-### 🚧 Planned Extensions
+### 🚧 Potential Extensions for Future Projects
 
 **Quality of Life**
 - Clone retraction system for undoing mistakes
@@ -92,6 +92,7 @@ A puzzle platformer where players create "clones" to solve spatial and timing pu
 - Leaderboards for optimization challenges
 - Level editor for community content
 - Additional puzzle mechanics and elements
+- Integration with other game genres
 
 ### 🔧 Technical Architecture
 

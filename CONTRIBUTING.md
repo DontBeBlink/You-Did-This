@@ -1,286 +1,103 @@
-# Contributing to You Did This
+# About You Did This
 
-Thank you for your interest in contributing to **You Did This**! This document provides guidelines and information for contributors to help maintain code quality and project consistency.
+**You Did This** is a solo development project by blink, created as a fun project to showcase reusable game systems and mechanics. This repository serves multiple purposes:
 
-## 🎯 Ways to Contribute
+- **Playable Game**: A puzzle platformer demonstrating clone-based mechanics
+- **System Showcase**: Modular, reusable game systems for other developers
+- **Learning Resource**: Reference implementation of complex game mechanics
+- **Portfolio Piece**: Demonstration of solo game development capabilities
 
-### 🐛 Bug Reports
-- Use GitHub Issues to report bugs
-- Include detailed reproduction steps
-- Specify Unity version and platform
-- Attach relevant console logs or screenshots
+## 🎯 Project Purpose
 
-### 💡 Feature Suggestions
-- Propose new puzzle mechanics or game features
-- Suggest improvements to existing systems
-- Discuss ideas in GitHub Discussions before implementation
+### For blink (the developer)
+- Fun project development with flexible timeline
+- System design and implementation practice
+- Potential foundation for future game projects
+- Portfolio demonstration of technical capabilities
 
-### 🔧 Code Contributions
-- Bug fixes and performance improvements
-- New puzzle elements and mechanics
-- Quality of life improvements
-- Documentation enhancements
+### For Other Solo Developers
+- **Reusable Packages**: Modular systems you can adapt for your games
+- **Learning Resource**: Study implementation of complex game mechanics
+- **Reference Code**: Well-documented examples of Unity development patterns
+- **Inspiration**: See how clone-based gameplay can be implemented
 
-### 🎨 Level Design
-- Create new puzzle levels
-- Design innovative clone-based challenges
-- Test and balance existing levels
+## 🛠️ Available Systems
 
-## 🚀 Getting Started
+This project includes several reusable packages that other developers might find useful:
 
-### Development Environment Setup
+### Clone Recording & Replay System
+- Physics-perfect action recording at 50Hz
+- Deterministic replay system for complex interactions
+- Scalable to multiple simultaneous clones
+- Modular design for easy integration
 
-1. **Unity Installation**
-   ```
-   Required: Unity 6000.2.0b9 or later
-   Recommended: Unity Hub for version management
-   ```
+### Audio Management System
+- Centralized audio management
+- Event-driven sound effects
+- Spatial audio support
+- Easy integration with game events
 
-2. **Fork and Clone**
-   ```bash
-   # Fork the repository on GitHub
-   git clone https://github.com/YOUR_USERNAME/GMTK2025.git
-   cd GMTK2025
-   ```
+### Interaction System
+- Flexible object interaction framework
+- Visual feedback system
+- Physics-based throwing mechanics
+- Extensible for custom interactions
 
-3. **Branch Strategy**
-   ```bash
-   # Create feature branch from main
-   git checkout main
-   git pull origin main
-   git checkout -b feature/your-feature-name
-   ```
+## 🎮 Exploring the Code
 
-### First-Time Setup
+### Getting Started
+1. **Unity Installation**: Unity 6000.2.0b9 or later
+2. **Clone Repository**: Download or clone this repository
+3. **Open in Unity**: Use Unity Hub to open the project
+4. **Test Play**: Open `Assets/Scenes/DemoScene.unity` and press Play
+5. **Study Systems**: Explore the modular packages in the Packages/ directory
 
-1. Open the project in Unity
-2. Let Unity import all assets (may take a few minutes)
-3. Open `Assets/Scenes/DemoScene.unity` to test basic functionality
-4. Press F1 in Play mode to view debug information
-5. Verify clone system works by pressing L to create manual clones
+### Key Files to Study
+- `Assets/Scripts/CloneManager.cs`: Central clone system controller
+- `Assets/Scripts/ActionRecorder.cs`: Physics-perfect action recording
+- `Assets/Scripts/Clone.cs`: Individual clone behavior and replay
+- `Packages/`: Modular systems packaged for reuse
 
-## 📋 Development Guidelines
+### Understanding the Architecture
+See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed technical documentation of the systems and how they work together.
 
-### Code Style
+## 💡 Questions & Feedback
 
-#### C# Conventions
-```csharp
-// Use PascalCase for public members
-public class CloneManager : MonoBehaviour
-{
-    // Use camelCase for private fields
-    private float loopDuration = 15f;
-    
-    // Use descriptive names and clear documentation
-    /// <summary>
-    /// Creates a new clone from recorded player actions
-    /// </summary>
-    public void CreateClone()
-    {
-        // Implementation here
-    }
-}
-```
+### For Technical Questions
+- **GitHub Issues**: Ask about specific systems or implementation details
+- **Code Comments**: Extensive inline documentation explains complex systems
+- **Documentation**: Comprehensive guides in the various .md files
 
-#### Unity-Specific Guidelines
-- **SerializeField**: Use `[SerializeField]` for private fields that need inspector access
-- **Headers**: Group related inspector fields with `[Header("Section Name")]`
-- **Tooltips**: Add helpful tooltips for designer-facing parameters
-- **Components**: Use `RequireComponent` attribute when dependencies exist
+### For Learning & Inspiration
+This project demonstrates:
+- Complex state management in Unity
+- Physics-based replay systems
+- Modular package architecture
+- Event-driven system design
+- Solo development workflow and documentation
 
-### System Design Principles
+## 📄 Usage & License
 
-#### Clone System Integration
-- All new mechanics should work with the clone replay system
-- Consider how recorded actions will be replayed by clones
-- Test interactions between multiple clones and new features
+This project is licensed under the MIT License (see [LICENSE.md](LICENSE.md)), which means:
+- ✅ You can use the code in your own projects
+- ✅ You can modify and adapt the systems
+- ✅ You can use it for commercial projects
+- ✅ Attribution appreciated but not required
 
-#### Performance Considerations
-- Optimize for multiple simultaneous clones (up to 10 by default)
-- Use object pooling for frequently created/destroyed objects
-- Profile physics interactions with multiple characters
+### Suggested Attribution
+If you use these systems in your projects, a mention like "Clone system inspired by blink's You Did This" would be appreciated but is not required.
 
-#### Modularity
-- Keep systems loosely coupled
-- Use events for cross-system communication
-- Make components easily configurable in the inspector
+## 🚀 Future Plans
 
-### Testing Requirements
+This is a flexible project developed whenever blink has time and feels like working on it. Potential future directions:
 
-#### Manual Testing Checklist
-- [ ] Basic player movement and controls work
-- [ ] Clone creation and replay functions correctly
-- [ ] New features work with existing clone system
-- [ ] No console errors or warnings
-- [ ] Performance remains stable with 10 active clones
-
-#### Automated Testing
-Currently, the project relies on manual testing. Contributions to add automated testing are welcome!
-
-## 🎮 Level Design Guidelines
-
-### Creating New Levels
-
-1. **Scene Setup**
-   ```
-   - Copy existing scene as template
-   - Add CloneManager component to scene
-   - Place player spawn point
-   - Configure camera bounds
-   ```
-
-2. **Puzzle Design Principles**
-   - Start with simple clone coordination
-   - Gradually introduce timing elements
-   - Provide clear visual feedback for goals
-   - Test with multiple solution paths
-
-3. **Required Components**
-   - **Player Spawn**: CloneManager position defines spawn point
-   - **Goals**: At least one Goal component for puzzle completion
-   - **Camera**: CameraController for player following
-
-### Level Testing
-- Test puzzle can be solved in intended way
-- Verify no unintended solutions break the puzzle
-- Confirm appropriate difficulty progression
-- Check clone replay works consistently
-
-## 🔧 Core Systems Documentation
-
-### Clone System Architecture
-
-#### Key Components
-- **CloneManager**: Central controller for clone lifecycle
-- **ActionRecorder**: Records player input and physics state
-- **Clone**: Individual clone behavior and replay logic
-
-#### Recording System
-```csharp
-// Actions recorded every FixedUpdate (50Hz)
-public struct PlayerAction
-{
-    public float timestamp;
-    public Vector3 position;
-    public Vector2 speed;
-    public bool isJumping;
-    public bool isDashing;
-    // ... other input states
-}
-```
-
-#### Integration Points
-New systems should integrate at these points:
-- **PlayerController**: Record new input types
-- **CharacterController2D**: Ensure physics state recording
-- **ActionRecorder**: Add new action types to PlayerAction struct
-- **Clone**: Add replay logic for new actions
-
-### Goal System
-Goals trigger puzzle completion and clone sticking:
-```csharp
-// Goals can be general or clone-specific
-[SerializeField] private bool requiresSpecificClone = false;
-[SerializeField] private int requiredCloneIndex = -1;
-```
-
-### Audio Integration
-Use AudioManager for consistent sound design:
-```csharp
-// Play sounds through centralized manager
-AudioManager.Instance.PlaySound(audioClip);
-```
-
-## 📝 Pull Request Process
-
-### Before Submitting
-
-1. **Code Quality**
-   - Follow established code style
-   - Add appropriate comments and documentation
-   - Remove debug code and temporary assets
-
-2. **Testing**
-   - Test changes in multiple scenes
-   - Verify clone system integration
-   - Check for console errors/warnings
-
-3. **Documentation**
-   - Update relevant documentation files
-   - Add comments for complex systems
-   - Include usage examples for new features
-
-### PR Template
-
-```markdown
-## Description
-Brief description of changes and motivation
-
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Level design
-- [ ] Documentation update
-- [ ] Performance improvement
-
-## Testing
-- [ ] Tested in DemoScene
-- [ ] Verified clone system compatibility
-- [ ] No console errors
-- [ ] Performance impact assessed
-
-## Screenshots/Videos
-Include visual changes or new level gameplay
-
-## Additional Notes
-Any special considerations or known limitations
-```
-
-### Review Process
-
-1. **Automated Checks**: Code formatting and basic validation
-2. **Manual Review**: Code quality, design consistency, documentation
-3. **Testing**: Functionality verification in Unity
-4. **Approval**: Merge after review completion
-
-## 🎯 Priority Areas for Contribution
-
-### High Priority
-- **Performance Optimization**: Multi-clone scenarios
-- **Level Design**: Creative puzzle mechanics
-- **Polish**: Visual and audio improvements
-- **Documentation**: Code comments and system guides
-
-### Medium Priority
-- **Quality of Life**: Better debug tools, editor improvements
-- **Extended Features**: New puzzle elements, mechanics
-- **Platform Support**: Different input devices, platforms
-
-### Future Considerations
-- **Automated Testing**: Unit tests for core systems
-- **Level Editor**: In-game level creation tools
-- **Community Features**: Level sharing, leaderboards
-
-## 📞 Communication
-
-### Getting Help
-- **GitHub Issues**: Bug reports and feature requests
-- **GitHub Discussions**: Design discussions and questions
-- **Code Comments**: Ask questions directly in PR reviews
-
-### Community Guidelines
-- Be respectful and constructive in all interactions
-- Provide detailed feedback and suggestions
-- Help others learn and improve their contributions
-- Keep discussions focused and productive
-
-## 📄 License and Legal
-
-By contributing to this project, you agree that your contributions will be licensed under the same license as the project. See [LICENSE.md](LICENSE.md) for details.
-
-### Attribution
-Contributors will be acknowledged in project documentation and release notes.
+- **System Refinements**: Improving existing packages based on usage
+- **New Game Projects**: Using these systems as foundation for new games
+- **Additional Packages**: Creating new reusable systems
+- **Community Inspiration**: Seeing what other solo devs create with these tools
 
 ---
 
-Thank you for contributing to **You Did This**! Your efforts help make this puzzle platformer even better for everyone. 🎮✨
+**Happy coding! 🎮✨**
+
+*This project represents the joy of solo game development - creating something fun while building reusable tools for the future.*

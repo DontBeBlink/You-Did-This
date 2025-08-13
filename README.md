@@ -2,7 +2,7 @@
 
 A puzzle platformer where players create "clones" to solve spatial and timing puzzles. Each clone repeats the player's previous actions, acting as both the key to progress and potentially an obstacle to avoid.
 
-**🎮 Created for GMTK Game Jam 2025**
+**🎮 A solo dev project by blink - showcasing reusable game systems and mechanics**
 
 ## 🎯 Core Concept
 
@@ -128,14 +128,12 @@ See [GDD_YouDidThis.md](GDD_YouDidThis.md) for the complete game design document
 - **Level Management**: Scene loading, progression, and game state management
 
 ### Contributing
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
-- Code style and standards
-- Pull request process
-- Issue reporting
-- Level design contributions
+This is a solo development project by blink, created as a fun project with potential for future reuse and to help other solo developers. The modular systems and packages are designed to be reusable in other games.
+
+For technical questions or suggestions about the game systems, feel free to open GitHub Issues. The codebase serves as both a playable game and a reference implementation for clone-based mechanics.
 
 ### Level Design
-For creators interested in building new levels and puzzles:
+For developers interested in learning from or building upon these systems:
 - **[Level Design Guide](LEVEL_DESIGN.md)**: Comprehensive guide to creating levels using the existing systems
 - **[Puzzle Ideas](PUZZLE_IDEAS.md)**: Detailed puzzle concepts, room layouts, and implementation plans
 - **[Example Scene Template](EXAMPLE_SCENE_TEMPLATE.md)**: Step-by-step tutorial for creating a basic puzzle scene
@@ -145,11 +143,11 @@ For creators interested in building new levels and puzzles:
 For detailed technical documentation about the game's systems and architecture, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ### Building the Game
-To create builds for distribution, see our [BUILD.md](BUILD.md) guide with platform-specific instructions.
+To create builds for distribution or testing, see our [BUILD.md](BUILD.md) guide with platform-specific instructions.
 
 ## 📝 Development Status
 
-**Current Version**: GMTK Game Jam 2025 Submission
+**Current Version**: Solo Dev Showcase & System Demo
 
 ### Implemented Features ✅
 - Complete clone system with physics-perfect replay
@@ -159,18 +157,21 @@ To create builds for distribution, see our [BUILD.md](BUILD.md) guide with platf
 - Audio management and feedback
 - Debug tools and visualization
 - Multiple test levels and scenes
+- Modular packages for reuse in other projects
 
 ### Potential Extensions 🚀
+These systems could be extended for future games or projects:
 - Leaderboards for optimization challenges (fewest clones, fastest time)
 - Advanced time-based mechanics and synchronization puzzles
 - Secret collectibles requiring creative clone coordination
 - Level editor for community-created content
+- Integration with other game genres (puzzle-RPG, strategy games)
 
-## 📞 Support & Community
+## 📞 Support & Questions
 
-- **Issues**: Report bugs or suggest features via GitHub Issues
-- **Discussions**: Join conversations about game design and development
-- **Game Jam**: Created for GMTK Game Jam 2025
+- **Issues**: Report bugs or ask technical questions via GitHub Issues
+- **Code Reference**: This project serves as a reference for clone-based game mechanics
+- **Solo Dev Project**: Created by blink as a fun project and system showcase
 
 ## 📄 License
 
@@ -178,4 +179,4 @@ This project is licensed under the terms specified in [LICENSE.md](LICENSE.md).
 
 ---
 
-**Made with ❤️ for GMTK Game Jam 2025**
+**Made with ❤️ by blink - A solo dev showcase of reusable game systems**
