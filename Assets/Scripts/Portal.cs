@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -21,7 +22,8 @@ using UnityEngine;
 /// Usage: Place Portal prefabs in scenes where teleportation is needed.
 /// Configure the target position in the inspector or set via code.
 /// </summary>
-[RequireComponent(typeof(Collider2D))]
+[RequireComponent(typeof(Collider2D))
+]
 public class Portal : MonoBehaviour
 {
     [Header("Portal Settings")]
@@ -33,32 +35,47 @@ public class Portal : MonoBehaviour
     [SerializeField] private float cooldownTime = 1f;               // Prevent rapid re-triggering
     [SerializeField] private bool disableAfterUse = false;          // One-time use portal
     [SerializeField] private bool requiresPlayerTag = true;         // Only activate for objects with "Player" tag
-    
+
+    [Header("Instant Mode")]
+    [SerializeField] private bool instantTeleport = false;          // If true, teleport instantly and preserve momentum
+    [SerializeField] private bool preserveMomentum = true;          // If true, keep (rotated) velocity magnitude
+    [SerializeField] private float exitSpeedScale = 1f;             // Multiplier applied to exit velocity
+
+    public enum FacingVectorMode { TransformUp, TransformRight, CustomLocal }
+    [Header("Facing Direction")]
+    [SerializeField] private FacingVectorMode facingVectorMode = FacingVectorMode.TransformUp;
+    [SerializeField] private Vector2 customFacingLocal = Vector2.up; // Used when mode = CustomLocal (normalized)
+
     [Header("Visual Effects")]
     [SerializeField] private bool useTransitionEffects = true;      // Use CloneManager's transition system
     [SerializeField] private bool playPortalSound = true;           // Play audio during teleportation
-    
+
+    [Header("Transition Timing")]
+    [SerializeField] private float moveToPortalDuration = 0.2f;
+    [SerializeField] private float preTeleportDelay = 0.5f;
+    [SerializeField] private float postTeleportSettleDelay = 0.2f;
+    [SerializeField] private float stopEffectsDelay = 0.3f;
+
+    [Header("Anti-Bounce Settings")]
+    [SerializeField] private float portalImmunityDuration = 0.35f;   // Ignore all portals for this long after teleport
+    [SerializeField] private float targetExitOffset = 0.5f;          // Push player out of target portal collider
+
+    [Header("Camera")]
+    [SerializeField] private bool warpCinemachineOnTeleport = true; // Snap camera to player on teleport to avoid disorienting lag
+
     // Internal state tracking
     private bool isOnCooldown = false;                              // Prevent rapid re-triggering
     private bool isActivated = false;                               // Track if portal has been used (for one-time portals)
     private CloneManager cloneManager;                              // Reference for transition effects
-    private Collider2D portalCollider;                             // Portal's trigger collider
     
+    // Tracks per-player portal immunity window
+    private static readonly Dictionary<int, float> portalImmunityUntil = new Dictionary<int, float>();
+
     /// <summary>
     /// Initialize portal components and validate setup.
     /// </summary>
     private void Awake()
     {
-        // Get required components
-        portalCollider = GetComponent<Collider2D>();
-        
-        // Ensure the collider is configured as a trigger
-        if (portalCollider != null && !portalCollider.isTrigger)
-        {
-            Debug.LogWarning($"Portal '{gameObject.name}': Collider should be set as trigger for portal functionality!");
-            portalCollider.isTrigger = true;
-        }
-        
         // Find CloneManager for transition effects
         cloneManager = FindFirstObjectByType<CloneManager>();
         if (cloneManager == null && useTransitionEffects)
@@ -74,18 +91,22 @@ public class Portal : MonoBehaviour
     /// <param name="other">The collider that entered the portal</param>
     private void OnTriggerEnter2D(Collider2D other)
     {
+        // Check player immunity first
+        var player = other.GetComponentInParent<PlayerController>();
+        if (player != null && IsPlayerImmuneToPortals(player)) return;
+
         // Check if portal can be activated
         if (!CanActivatePortal(other))
             return;
-        
-        // Get the PlayerController component
-        PlayerController player = other.GetComponent<PlayerController>();
+
+        // Get the PlayerController component (allow child colliders)
+        player = other.GetComponentInParent<PlayerController>();
         if (player == null)
         {
-            Debug.LogWarning($"Portal '{gameObject.name}': No PlayerController found on triggering object!");
+            Debug.LogWarning($"Portal '{gameObject.name}': No PlayerController found on triggering object or its parents!");
             return;
         }
-        
+
         // Activate the portal
         StartCoroutine(ActivatePortal(player));
     }
@@ -114,8 +135,28 @@ public class Portal : MonoBehaviour
         {
             return false;
         }
-        
+
+        // Additional immunity gate (covers cases where OnTriggerEnter2D wasn't passed a PlayerController yet)
+        var player = other.GetComponentInParent<PlayerController>();
+        if (player != null && IsPlayerImmuneToPortals(player)) return false;
+
         return true;
+    }
+
+    private bool IsPlayerImmuneToPortals(PlayerController player)
+    {
+        int id = player.GetInstanceID();
+        if (portalImmunityUntil.TryGetValue(id, out float until))
+        {
+            return Time.time < until;
+        }
+        return false;
+    }
+
+    private void GrantPortalImmunity(PlayerController player, float duration)
+    {
+        int id = player.GetInstanceID();
+        portalImmunityUntil[id] = Time.time + duration;
     }
     
     /// <summary>
@@ -130,33 +171,40 @@ public class Portal : MonoBehaviour
         // Calculate target position
         Vector3 finalTargetPosition = GetFinalTargetPosition();
 
-        // If using a targetTransform, and it has a Portal script, start cooldown on that portal too
+        // Try to locate a Portal component near/at the target for cooldown + exit offset
+        Portal targetPortal = null;
         if (useTransformAsTarget && targetTransform != null)
         {
-            Portal targetPortal = targetTransform.GetComponent<Portal>();
-            if (targetPortal != null)
-            {
-                targetPortal.StartPortalCooldown();
-                targetPortal.isOnCooldown = true;
-            }
+            targetPortal = targetTransform.GetComponentInParent<Portal>();
+            if (targetPortal == null)
+                targetPortal = targetTransform.GetComponentInChildren<Portal>(true);
         }
 
-        // Perform teleportation with transition effects
-        if (useTransitionEffects)
+        // Start target portal cooldown early (best-effort)
+        if (targetPortal != null)
+        {
+            targetPortal.StartPortalCooldown();
+        }
+
+        // Perform teleportation
+        if (instantTeleport)
+        {
+            TeleportPlayerWithMomentum(player, finalTargetPosition, targetPortal);
+        }
+        else if (useTransitionEffects)
         {
             yield return StartCoroutine(PlayPortalTransition(player, finalTargetPosition));
         }
         else
         {
             // Direct teleportation without effects
-            TeleportPlayer(player, finalTargetPosition);
+            TeleportPlayer(player, finalTargetPosition, targetPortal);
         }
 
         // Mark as activated (for one-time portals)
         if (disableAfterUse)
         {
             isActivated = true;
-            portalCollider.enabled = false; // Disable the trigger
         }
 
         // Start cooldown timer
@@ -172,6 +220,7 @@ public class Portal : MonoBehaviour
     {
         if (!isOnCooldown)
         {
+            isOnCooldown = true; // ensure cooldown actually engages
             StartCoroutine(CooldownTimer());
         }
     }
@@ -201,56 +250,201 @@ public class Portal : MonoBehaviour
     private IEnumerator PlayPortalTransition(PlayerController player, Vector3 targetPos)
     {
         CharacterController2D character = player.GetComponent<CharacterController2D>();
-        
+
+        // Preserve world Z
+        float playerZ = player.transform.position.z;
+        targetPos.z = playerZ;
+
+        // Find target portal again for exit offset/cooldown safety
+        Portal targetPortal = null;
+        if (useTransformAsTarget && targetTransform != null)
+        {
+            targetPortal = targetTransform.GetComponentInParent<Portal>();
+            if (targetPortal == null)
+                targetPortal = targetTransform.GetComponentInChildren<Portal>(true);
+        }
+
         if (character != null)
         {
             // Trigger transition animation and immobilize player briefly
             Animator playerAnimator = player.GetComponent<Animator>();
             if (playerAnimator != null)
-                playerAnimator.SetTrigger("pickup"); // Reuse pickup animation for portal
-            
-            // Immobilize player during transition
+                playerAnimator.SetTrigger("invulnerable");
+
             character.Immobile = true;
-            character.SetPhysicsState(character.transform.position, Vector2.zero, Vector2.zero);
-            
-            // Play portal sound (reusing retract sound for consistency)
+            character.SetGravityScale(0f);
+
+            // Move player towards center of portal
+            yield return character.MoveTowardsRoutine(this.transform.position, moveToPortalDuration);
+
+            // Play portal sound
             if (playPortalSound && AudioManager.Instance != null)
             {
                 AudioManager.Instance.PlayRetractSound();
             }
-            
-            // Wait for animation
-            yield return new WaitForSeconds(0.5f);
-            
-            // Teleport the player
-            TeleportPlayer(player, targetPos);
-            
+
+            // Start CloneManager recording effects just before teleporting
+            if (cloneManager != null)
+            {
+                cloneManager.TriggerStartRecordingEffects();
+            }
+
+            // Wait for pre-teleport animation
+            yield return new WaitForSeconds(preTeleportDelay);
+
+            // Teleport with exit offset + target cooldown
+            TeleportPlayer(player, targetPos, targetPortal);
+
+            // Short settle delay
+            yield return new WaitForSeconds(postTeleportSettleDelay);
+
             // Reset physics state at new position
-            character.SetPhysicsState(targetPos, Vector2.zero, Vector2.zero);
-            
-            // Re-enable player movement
+            character.SetPhysicsState(player.transform.position, Vector2.zero, Vector2.zero);
+            character.SetGravityScale(1f);
             character.Immobile = false;
         }
         else
         {
             // Fallback: direct teleportation if no character controller
-            TeleportPlayer(player, targetPos);
+            TeleportPlayer(player, targetPos, targetPortal);
         }
-        
-        // Wait for any additional effects
-        yield return new WaitForSeconds(0.3f);
+
+        // Additional effects delay before stopping CloneManager effects
+        yield return new WaitForSeconds(stopEffectsDelay);
+
+        if (cloneManager != null)
+        {
+            cloneManager.TriggerStopRecordingEffects();
+        }
     }
-    
-    /// <summary>
-    /// Directly teleport the player to the target position.
-    /// </summary>
-    /// <param name="player">The PlayerController to teleport</param>
-    /// <param name="targetPos">The position to teleport to</param>
-    private void TeleportPlayer(PlayerController player, Vector3 targetPos)
+
+    // Compute a world-space facing vector for this portal based on settings
+    private static Vector2 GetFacingVectorWorld(Portal portal)
     {
-        player.transform.position = targetPos;
+        switch (portal.facingVectorMode)
+        {
+            case FacingVectorMode.TransformRight:
+                return portal.transform.right.normalized;
+            case FacingVectorMode.CustomLocal:
+                return portal.transform.TransformDirection((Vector3)portal.customFacingLocal).normalized;
+            case FacingVectorMode.TransformUp:
+            default:
+                return portal.transform.up.normalized;
+        }
     }
-    
+
+    // Rotate a Vector2 by angle in degrees (Z axis)
+    private static Vector2 Rotate(Vector2 v, float angleDeg)
+    {
+        float rad = angleDeg * Mathf.Deg2Rad;
+        float cs = Mathf.Cos(rad);
+        float sn = Mathf.Sin(rad);
+        return new Vector2(v.x * cs - v.y * sn, v.x * sn + v.y * cs);
+    }
+
+    // Instant teleport that preserves and rotates momentum according to portal facing directions
+    private void TeleportPlayerWithMomentum(PlayerController player, Vector3 targetPos, Portal targetPortal)
+    {
+        // Determine entry/exit facing
+        Vector2 entryForward = GetFacingVectorWorld(this);
+        Vector2 exitForward = targetPortal != null ? GetFacingVectorWorld(targetPortal) : entryForward;
+        float deltaAngle = Vector2.SignedAngle(entryForward, exitForward);
+
+        // Push out along exit facing
+        Vector3 exitPush = (Vector3)exitForward.normalized * targetExitOffset;
+
+        // Preserve Z
+        targetPos.z = player.transform.position.z;
+
+        // Use CharacterController2D velocity, not Rigidbody2D (controller ignores rb velocity)
+        var character = player.GetComponent<CharacterController2D>();
+        Vector2 inVel = Vector2.zero;
+        if (character != null)
+        {
+            inVel = character.TotalSpeed; // current movement from custom controller
+        }
+        else
+        {
+            // Fallback to Rigidbody2D if no character (rare for your setup)
+            var rb = player.GetComponent<Rigidbody2D>();
+            if (rb != null) inVel = rb.linearVelocity;
+        }
+
+        // Compute out velocity
+        Vector2 outVel = preserveMomentum ? Rotate(inVel, deltaAngle) * exitSpeedScale : Vector2.zero;
+
+        // Teleport position
+        Vector3 oldPos = player.transform.position;
+        Vector3 newPos = targetPos + exitPush;
+        player.transform.position = newPos;
+
+        // Snap Cinemachine camera(s) to the new player position to prevent damping lag
+        if (warpCinemachineOnTeleport && cloneManager != null)
+        {
+            cloneManager.WarpCamerasFollowing(player.transform, newPos - oldPos);
+        }
+
+        // Apply velocity via CharacterController2D so it actually takes effect
+        if (character != null)
+        {
+            // Put momentum into externalForce so it decays with your friction system
+            // Keep speed zero to avoid double-counting
+            character.SetPhysicsState(newPos, Vector2.zero, outVel);
+
+            // Update facing based on exit velocity if any
+            if (outVel.sqrMagnitude > 0.0001f)
+            {
+                bool facingRight = outVel.x >= 0f;
+                var anim = character.GetComponent<Animator>();
+                if (anim != null) anim.SetBool("facingRight", facingRight);
+            }
+        }
+        else
+        {
+            // Fallback to Rigidbody2D if no character
+            var rb = player.GetComponent<Rigidbody2D>();
+            if (rb != null) rb.linearVelocity = outVel;
+        }
+
+        // Grant temporary immunity to portals
+        GrantPortalImmunity(player, portalImmunityDuration);
+
+        // Ensure target portal is on cooldown even if found late
+        if (targetPortal != null)
+        {
+            targetPortal.StartPortalCooldown();
+        }
+    }
+
+    // Overload to apply offset/cooldown (non-instant path uses this)
+    private void TeleportPlayer(PlayerController player, Vector3 targetPos, Portal targetPortal)
+    {
+        // Use exit portal facing for push
+        Vector2 exitForward = targetPortal != null ? GetFacingVectorWorld(targetPortal) : GetFacingVectorWorld(this);
+        Vector3 pushOut = (Vector3)exitForward.normalized * targetExitOffset;
+
+        // Teleport position
+        Vector3 oldPos = player.transform.position;
+        targetPos.z = oldPos.z;
+        Vector3 newPos = targetPos + pushOut;
+        player.transform.position = newPos;
+
+        // Snap Cinemachine camera(s) to the new player position to prevent damping lag
+        if (warpCinemachineOnTeleport && cloneManager != null)
+        {
+            cloneManager.WarpCamerasFollowing(player.transform, newPos - oldPos);
+        }
+
+        // Grant temporary immunity to all portals after teleport
+        GrantPortalImmunity(player, portalImmunityDuration);
+
+        // Ensure target portal is on cooldown even if found late
+        if (targetPortal != null)
+        {
+            targetPortal.StartPortalCooldown();
+        }
+    }
+
     /// <summary>
     /// Handle cooldown timer to prevent rapid re-triggering.
     /// </summary>
@@ -308,10 +502,6 @@ public class Portal : MonoBehaviour
     {
         isActivated = false;
         isOnCooldown = false;
-        if (portalCollider != null)
-        {
-            portalCollider.enabled = true;
-        }
     }
     
     #endregion
@@ -343,4 +533,11 @@ public class Portal : MonoBehaviour
     }
     
     #endregion
+
+    private void OnValidate()
+    {
+        if (customFacingLocal.sqrMagnitude < 1e-6f) customFacingLocal = Vector2.up;
+        else customFacingLocal.Normalize();
+        if (exitSpeedScale < 0f) exitSpeedScale = 0f;
+    }
 }

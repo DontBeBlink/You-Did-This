@@ -405,6 +405,40 @@ public class CloneManager : MonoBehaviour
             yield return new WaitForSeconds(0.5f);
     }
 
+    // Public wrappers so external systems (e.g., Portal) can reuse the loop VFX
+    public void TriggerStartRecordingEffects()
+    {
+        StartRecordingEffects();
+    }
+
+    public void TriggerStopRecordingEffects()
+    {
+        StopRecordingEffects();
+    }
+
+    // Inform Cinemachine cameras that the follow target teleported (snaps camera, no damping lag)
+    public void WarpCamerasFollowing(Transform target, Vector3 positionDelta)
+    {
+        // Prefer the serialized cineCamera if it follows the target
+        if (cineCamera != null && cineCamera.Follow == target)
+        {
+            cineCamera.OnTargetObjectWarped(target, positionDelta);
+        }
+        else
+        {
+            // Fallback: find any Cinemachine cameras following this target and warp them
+            var cams = Object.FindObjectsByType<Unity.Cinemachine.CinemachineCamera>(FindObjectsSortMode.None);
+            for (int i = 0; i < cams.Length; i++)
+            {
+                var cam = cams[i];
+                if (cam != null && cam.Follow == target)
+                {
+                    cam.OnTargetObjectWarped(target, positionDelta);
+                }
+            }
+        }
+    }
+
     #endregion
 
     #region Camera Zoom Effects

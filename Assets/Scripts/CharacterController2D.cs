@@ -56,6 +56,8 @@ public class CharacterController2D : ObjectController2D {
     public bool Grounded { get; set; }
     public CollisionInfo Collisions => collisions;
 
+    private Coroutine moveTowardsCoroutine;
+
     /// <summary>
     /// Start is called on the frame when a script is enabled just before
     /// any of the Update methods is called the first time.
@@ -96,6 +98,77 @@ public class CharacterController2D : ObjectController2D {
         JustInteracted = false;
         JustAttacked = false;
         LastDashDirection = Vector2.zero;
+    }
+
+    /// <summary>
+    /// Starts moving the character toward a target world position over a duration.
+    /// Returns the started Coroutine for optional management.
+    /// </summary>
+    public Coroutine MoveTowards(Vector3 targetWorldPosition, float duration, AnimationCurve curve = null)
+    {
+        if (moveTowardsCoroutine != null)
+        {
+            StopCoroutine(moveTowardsCoroutine);
+            moveTowardsCoroutine = null;
+        }
+        moveTowardsCoroutine = StartCoroutine(MoveTowardsRoutine(targetWorldPosition, duration, curve));
+        return moveTowardsCoroutine;
+    }
+
+    /// <summary>
+    /// Coroutine that moves the character toward a target world position over a duration.
+    /// Use yield return character.MoveTowardsRoutine(...) inside coroutines to wait for completion.
+    /// </summary>
+    public IEnumerator MoveTowardsRoutine(Vector3 targetWorldPosition, float duration, AnimationCurve curve = null)
+    {
+        // Sanitize duration
+        if (duration <= 0f)
+        {
+            // Snap instantly
+            SetPhysicsState(targetWorldPosition, Vector2.zero, Vector2.zero);
+            yield break;
+        }
+
+        // Default to linear if no curve provided
+        if (curve == null)
+        {
+            curve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
+        }
+
+        Vector3 startPos = transform.position;
+        // Keep Z unchanged unless explicitly set in target
+        targetWorldPosition.z = startPos.z;
+
+        // Freeze controller while moving
+        bool prevImmobile = Immobile;
+        Immobile = true;
+
+        // Cancel dashing and zero out motion while we tween
+        Dashing = false;
+        SetPhysicsState(startPos, Vector2.zero, Vector2.zero);
+
+        float t = 0f;
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            float n = Mathf.Clamp01(t / duration);
+            float eased = Mathf.Clamp01(curve.Evaluate(n));
+            Vector3 nextPos = Vector3.LerpUnclamped(startPos, targetWorldPosition, eased);
+
+            // Maintain z and apply via controller state
+            nextPos.z = startPos.z;
+            SetPhysicsState(nextPos, Vector2.zero, Vector2.zero);
+
+            yield return null;
+        }
+
+        // Ensure final position is exact
+        SetPhysicsState(targetWorldPosition, Vector2.zero, Vector2.zero);
+
+        // Restore mobility
+        Immobile = prevImmobile;
+
+        moveTowardsCoroutine = null;
     }
 
     /// <summary>
