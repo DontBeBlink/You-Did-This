@@ -103,7 +103,7 @@ Key settings in Edit → Project Settings → Player:
 #### General Settings
 - **Product Name**: You Did This
 - **Version**: 1.0.0 (or current version)
-- **Company Name**: DontBeBlink
+- **Company Name**: blink
 
 #### Resolution Settings
 - **Default Resolution**: 1920x1080 (16:9)
@@ -252,4 +252,4 @@ For automated builds (advanced):
 
 ---
 
-**Need Help?** Check the [CONTRIBUTING.md](CONTRIBUTING.md) guide or create an issue on GitHub for build-specific problems.
+**Need Help?** Check the documentation or create an issue on GitHub for build-specific problems.
