@@ -1,0 +1,29 @@
+{
+  "name": "com.gmtk2025.interaction-system",
+  "displayName": "Interaction System",
+  "version": "1.0.0",
+  "unity": "2022.3",
+  "description": "A comprehensive object interaction system for Unity featuring proximity detection, visual feedback, pickup mechanics, and input device icon support. Originally developed for GMTK2025, this system enables rich character-object interactions for puzzles and gameplay.",
+  "keywords": [
+    "interaction",
+    "pickup-system",
+    "object-detection",
+    "visual-feedback",
+    "input-icons",
+    "proximity-detection",
+    "GMTK2025"
+  ],
+  "author": {
+    "name": "GMTK2025 Team",
+    "url": "https://github.com/DontBeBlink/GMTK2025"
+  },
+  "license": "MIT",
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "Basic Interaction System Example",
+      "description": "A complete example showing object interaction, pickup mechanics, and visual feedback setup.",
+      "path": "Samples~/BasicExample"
+    }
+  ]
+}
