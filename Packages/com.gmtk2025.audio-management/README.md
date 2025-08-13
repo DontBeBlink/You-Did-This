@@ -1,6 +1,6 @@
 # Audio Management System
 
-A comprehensive singleton-based audio management system for Unity, originally developed for GMTK2025. This system provides centralized audio control with category-based organization, volume management, and advanced audio features.
+A comprehensive singleton-based audio management system for Unity, originally developed for You Did This. This system provides centralized audio control with category-based organization, volume management, and advanced audio features.
 
 ## 🎯 Features
 

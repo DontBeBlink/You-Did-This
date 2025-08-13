@@ -1,8 +1,8 @@
-# Executive Summary: GMTK2025 System Extraction Project
+# Executive Summary: You Did This System Packages
 
 ## 🎯 Project Overview
 
-The GMTK2025 "You Did This" project contains several exceptionally well-architected systems that have significant reuse potential across the Unity development community. This document outlines a strategic plan to extract these systems into standalone, professional-grade Unity packages.
+The "You Did This" project by blink contains several exceptionally well-architected systems that have significant reuse potential across the Unity development community. This document outlines the value and potential of these systems as standalone, professional-grade Unity packages.
 
 ## 💡 Value Proposition
 
@@ -12,11 +12,11 @@ The GMTK2025 "You Did This" project contains several exceptionally well-architec
 - **Time Savings**: Developers can implement complex mechanics in hours instead of weeks
 - **Learning Resource**: Demonstrates best practices in Unity system architecture
 
-### For the Project
+### For blink (the developer)
 - **Technical Portfolio**: Showcases advanced system design and architecture skills
 - **Community Recognition**: Establishes reputation in Unity development community
 - **Networking**: Connects with other developers and potential collaborators
-- **Future Opportunities**: Opens doors for consulting, partnerships, or employment
+- **Future Opportunities**: Opens doors for consulting, partnerships, or employment opportunities
 
 ## 🏗️ Extractable Systems Analysis
 

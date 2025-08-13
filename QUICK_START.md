@@ -10,8 +10,8 @@ Use this checklist to quickly set up and test the **You Did This** project:
 - [ ] Unity Hub (recommended for version management)
 
 ### Repository Setup
-- [ ] Fork the repository on GitHub (if contributing)
-- [ ] Clone repository: `git clone https://github.com/DontBeBlink/GMTK2025.git`
+- [ ] Fork the repository on GitHub (if you want to experiment)
+- [ ] Clone repository: `git clone https://github.com/DontBeBlink/You-Did-This.git`
 - [ ] Open project in Unity Hub (Add → Select cloned folder)
 - [ ] Wait for Unity to import assets (may take 2-3 minutes)
 
@@ -143,6 +143,6 @@ If creating new levels:
 
 ---
 
-**Need Help?** Check the [CONTRIBUTING.md](CONTRIBUTING.md) guide or create an issue on GitHub.
+**Need Help?** Check the documentation or create an issue on GitHub for support.
 
-**Ready to Contribute?** See our [contribution guidelines](CONTRIBUTING.md) for code standards and submission process.
+**Want to Learn More?** See the project overview in [CONTRIBUTING.md](CONTRIBUTING.md) for technical details and usage examples.
