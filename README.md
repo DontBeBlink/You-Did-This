@@ -50,8 +50,8 @@ Navigate through puzzle levels by strategically creating clones of yourself. Eac
 | Jump | Spacebar | Jump (variable height based on hold duration) |
 | Dash | Shift | Quick directional dash |
 | Interact | E | Pick up objects, activate switches |
-| Attack/Throw | Left Click | Throw picked up objects |
-| Create Clone | L | Manually create a clone (if enabled) |
+| Throw | Left Click | Throw picked up objects |
+| Create Clone | F | Manually create a clone (if enabled) |
 | Retract Clone | Z | Remove last clone and move to its position |
 | Pause | Escape | Pause/Resume game |
 | Restart | R | Restart current level |
