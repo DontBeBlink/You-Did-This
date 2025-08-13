@@ -125,7 +125,12 @@ namespace GMTK2025.ActionRecording.Examples
         {
             // Simple UI for demonstration
             GUILayout.BeginArea(new Rect(10, 10, 300, 200));
+            GUILayout.BeginArea(new Rect(10, 10, 300, 200));
+#if UNITY_EDITOR
             GUILayout.Label("Action Recording System Example", EditorGUIUtility.isProSkin ? GUI.skin.box : GUI.skin.label);
+#else
+            GUILayout.Label("Action Recording System Example", GUI.skin.label);
+#endif
             GUILayout.Space(10);
 
             GUILayout.Label("Controls:");
