@@ -8,6 +8,14 @@
 /[Oo]bj/
 /[Bb]uild/
 /[Bb]uilds/
+
+# Memories system data files
+memories.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
 /[Ll]ogs/
 /[Uu]ser[Ss]ettings/
 *.log

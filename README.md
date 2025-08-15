@@ -73,6 +73,15 @@ Navigate through puzzle levels by strategically creating clones of yourself. Eac
 - Automatic & Manual Creation: Clones created every 15 seconds or manually with the L/F key (project-configurable)
 - Goal-Based Sticking: Clones become permanent fixtures when reaching their designated goals
 
+### 🧠 Memories Management System
+- Web-based Interface: Dedicated memories page with powerful search and filtering
+- Advanced Search: Full-text search across titles and content
+- Tag & People Filters: Filter memories by tags and mentioned people with clickable chips
+- Bulk Operations: Select multiple memories for bulk deletion
+- Inline Actions: Quick edit and delete operations without page reload
+- Server-side Pagination: Efficient handling of large memory collections
+- REST API: Full CRUD operations with filtering and pagination support
+
 ### 🎮 Refined Platformer Controls
 - Responsive movement with variable jump height
 - Dash mechanics for precise navigation
@@ -115,6 +124,7 @@ Navigate through puzzle levels by strategically creating clones of yourself. Eac
 ### Prerequisites
 - Unity 6000.2.0b9 or later for the demo project
 - Packages themselves target Unity 2022.3+ (see above)
+- Python 3.8+ for the memories server (optional)
 - Git for version control
 
 ### Setup Instructions
@@ -133,6 +143,17 @@ cd You-Did-This
 - Open any scene from Assets/Scenes/ (recommend starting with DemoScene.unity)
 - Press Play to test core mechanics
 - Use F1 to toggle debug information
+
+4) Run the Memories System (Optional)
+```bash
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Start the memories server
+python -m server.main
+
+# Open http://localhost:8000 in your browser
+```
 
 ### Quick Start Guide
 For a comprehensive setup checklist and testing guide, see QUICK_START.md.
@@ -157,6 +178,17 @@ Assets/
 ├── Sprites/          # 2D artwork and textures
 ├── SFX/              # Audio clips and sound effects
 └── Input/            # Input System configuration
+
+server/
+├── main.py           # FastAPI server with memories API
+├── storage.py        # JSON-based data persistence layer
+├── schemas.py        # Pydantic data models
+└── __init__.py       # Package initialization
+
+web/
+├── memories.html     # Memories management interface
+└── js/
+    └── api.js        # JavaScript API client and UI logic
 
 Packages/
 ├── com.gmtk2025.action-recording/     # UPM package: Action Recording System (MIT)
