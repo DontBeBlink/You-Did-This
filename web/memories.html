@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You Did This - Memories</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <nav class="main-nav">
+            <h1 class="logo"><a href="index.html">You Did This</a></h1>
+            <ul class="nav-links">
+                <li><a href="memories.html" class="active">Memories</a></li>
+                <li><a href="agenda.html">Agenda</a></li>
+                <li><a href="backup.html">Backup</a></li>
+                <li><a href="settings.html">Settings</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="page-content">
+        <section class="page-header">
+            <h1>Memories</h1>
+            <p>Capture and organize your important moments.</p>
+            <button class="primary-btn" data-action="capture-memory">
+                <span class="btn-icon">📝</span>
+                Capture New Memory
+            </button>
+        </section>
+
+        <section class="memories-grid">
+            <div class="memory-card">
+                <div class="memory-date">Today</div>
+                <div class="memory-content">
+                    <h3>Solved the clone puzzle</h3>
+                    <p>Finally figured out the timing sequence for level 3...</p>
+                </div>
+                <div class="memory-tags">
+                    <span class="tag">gaming</span>
+                    <span class="tag">achievement</span>
+                </div>
+            </div>
+            
+            <div class="memory-card">
+                <div class="memory-date">Yesterday</div>
+                <div class="memory-content">
+                    <h3>New game idea</h3>
+                    <p>What if clones could interact with each other?</p>
+                </div>
+                <div class="memory-tags">
+                    <span class="tag">ideas</span>
+                </div>
+            </div>
+            
+            <div class="memory-card">
+                <div class="memory-date">2 days ago</div>
+                <div class="memory-content">
+                    <h3>Level design breakthrough</h3>
+                    <p>The portal system could work perfectly with the retract animations...</p>
+                </div>
+                <div class="memory-tags">
+                    <span class="tag">development</span>
+                    <span class="tag">design</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Shared modals -->
+    <div id="command-palette" class="command-palette hidden" role="dialog" aria-modal="true" aria-labelledby="command-palette-title">
+        <div class="command-palette-backdrop"></div>
+        <div class="command-palette-content">
+            <div class="command-palette-header">
+                <h2 id="command-palette-title" class="sr-only">Command Palette</h2>
+                <input 
+                    type="text" 
+                    id="command-palette-input" 
+                    class="command-input" 
+                    placeholder="Type a command or search..."
+                    aria-label="Command palette search input"
+                    autocomplete="off"
+                >
+            </div>
+            <div class="command-results" role="listbox" aria-label="Command results">
+                <!-- Commands will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="shortcuts-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="shortcuts-title">Keyboard Shortcuts</h2>
+                <button class="modal-close" aria-label="Close shortcuts modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcuts-grid">
+                    <div class="shortcut-group">
+                        <h3>Navigation</h3>
+                        <div class="shortcut-item">
+                            <kbd>g</kbd> <kbd>m</kbd>
+                            <span>Go to Memories</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>g</kbd> <kbd>a</kbd>
+                            <span>Go to Agenda</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-group">
+                        <h3>Actions</h3>
+                        <div class="shortcut-item">
+                            <kbd>n</kbd>
+                            <span>New Memory</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>/</kbd>
+                            <span>Search</span>
+                        </div>
+                    </div>
+                    <div class="shortcut-group">
+                        <h3>General</h3>
+                        <div class="shortcut-item">
+                            <kbd>Ctrl</kbd>+<kbd>K</kbd>
+                            <span>Command Palette</span>
+                        </div>
+                        <div class="shortcut-item">
+                            <kbd>?</kbd>
+                            <span>Show Shortcuts</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/ui.js"></script>
+</body>
+</html>
