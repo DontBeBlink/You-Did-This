@@ -100,3 +100,9 @@ InitTestScene*.unity*
 
 # Unity AI Toolkit generated assets (auto-generated content)
 GeneratedAssets/
+
+# Settings server database and temporary files
+server/settings.db
+server/settings.db-journal
+server/__pycache__/
+server/*.pyc

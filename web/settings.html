@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You Did This - Settings</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success-color: #16a34a;
+            --error-color: #dc2626;
+            --warning-color: #ca8a04;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+            --text: #334155;
+            --text-muted: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-top: 1rem;
+        }
+
+        .status-indicator.online {
+            background-color: #dcfce7;
+            color: var(--success-color);
+        }
+
+        .status-indicator.offline {
+            background-color: #fef3c7;
+            color: var(--warning-color);
+        }
+
+        .settings-card {
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .settings-card h2 {
+            color: var(--text);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-group small {
+            display: block;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-secondary {
+            background-color: var(--border);
+            color: var(--text);
+        }
+
+        .btn-secondary:hover {
+            background-color: #cbd5e1;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #15803d;
+        }
+
+        .token-container {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .token-display {
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            word-break: break-all;
+        }
+
+        .notification {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-weight: 500;
+        }
+
+        .notification.success {
+            background-color: #dcfce7;
+            color: var(--success-color);
+            border: 1px solid #bbf7d0;
+        }
+
+        .notification.error {
+            background-color: #fef2f2;
+            color: var(--error-color);
+            border: 1px solid #fecaca;
+        }
+
+        .notification.warning {
+            background-color: #fef3c7;
+            color: var(--warning-color);
+            border: 1px solid #fde68a;
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .token-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 You Did This</h1>
+            <p>Game Settings Configuration</p>
+            <div id="statusIndicator" class="status-indicator offline">
+                <span id="statusDot">●</span>
+                <span id="statusText">Checking connection...</span>
+            </div>
+        </div>
+
+        <div id="notifications"></div>
+
+        <!-- Ntfy Notifications Settings -->
+        <div class="settings-card">
+            <h2>
+                📢 Ntfy Notifications
+            </h2>
+            <div class="form-group">
+                <label for="ntfyUrl">Ntfy Server URL</label>
+                <input type="url" id="ntfyUrl" placeholder="https://ntfy.sh">
+                <small>The ntfy server URL for sending notifications</small>
+            </div>
+            <div class="form-group">
+                <label for="ntfyTopic">Ntfy Topic</label>
+                <input type="text" id="ntfyTopic" placeholder="my-game-notifications">
+                <small>Topic name for receiving notifications (must be unique)</small>
+            </div>
+            <div class="button-group">
+                <button type="button" class="btn btn-secondary" onclick="testNotification()">
+                    🧪 Test Notification
+                </button>
+            </div>
+        </div>
+
+        <!-- Whisper Model Settings -->
+        <div class="settings-card">
+            <h2>
+                🎤 Whisper Model Configuration
+            </h2>
+            <div class="form-group">
+                <label for="whisperModel">Whisper Model</label>
+                <select id="whisperModel">
+                    <option value="tiny">Tiny (39 MB, fastest)</option>
+                    <option value="base">Base (74 MB, balanced)</option>
+                    <option value="small">Small (244 MB, better quality)</option>
+                    <option value="medium">Medium (769 MB, high quality)</option>
+                    <option value="large">Large (1550 MB, highest quality)</option>
+                </select>
+                <small>Choose model size based on performance vs. accuracy needs</small>
+            </div>
+            <div class="form-group">
+                <label for="whisperLanguage">Language</label>
+                <select id="whisperLanguage">
+                    <option value="auto">Auto-detect</option>
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="it">Italian</option>
+                    <option value="pt">Portuguese</option>
+                    <option value="ru">Russian</option>
+                    <option value="ja">Japanese</option>
+                    <option value="ko">Korean</option>
+                    <option value="zh">Chinese</option>
+                </select>
+                <small>Specify language for better accuracy</small>
+            </div>
+            <div class="form-group">
+                <label for="whisperDevice">Processing Device</label>
+                <select id="whisperDevice">
+                    <option value="cpu">CPU (compatible everywhere)</option>
+                    <option value="cuda">GPU/CUDA (faster, requires NVIDIA GPU)</option>
+                    <option value="mps">Metal Performance Shaders (Apple Silicon)</option>
+                </select>
+                <small>Choose based on your hardware capabilities</small>
+            </div>
+        </div>
+
+        <!-- Calendar Token Management -->
+        <div class="settings-card">
+            <h2>
+                📅 Calendar Integration
+            </h2>
+            <div class="form-group">
+                <label for="icsToken">ICS Calendar Token</label>
+                <div class="token-container">
+                    <div id="icsToken" class="token-display">Loading...</div>
+                    <button type="button" class="btn btn-secondary" onclick="copyToken()">
+                        📋 Copy
+                    </button>
+                </div>
+                <small>Use this token to access your game calendar feed</small>
+            </div>
+            <div class="button-group">
+                <button type="button" class="btn btn-secondary" onclick="generateNewToken()">
+                    🔄 Generate New Token
+                </button>
+            </div>
+        </div>
+
+        <!-- Save Settings -->
+        <div class="settings-card">
+            <div class="button-group">
+                <button type="button" class="btn btn-primary" onclick="saveSettings()">
+                    💾 Save Settings
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="loadSettings()">
+                    🔄 Reload Settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        // Initialize API client
+        const api = new SettingsAPI();
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkServerStatus();
+            loadSettings();
+        });
+
+        async function checkServerStatus() {
+            const isOnline = await api.checkHealth();
+            const indicator = document.getElementById('statusIndicator');
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            
+            if (isOnline) {
+                indicator.className = 'status-indicator online';
+                text.textContent = 'Server connected';
+            } else {
+                indicator.className = 'status-indicator offline';
+                text.textContent = 'Offline mode (localStorage only)';
+            }
+        }
+
+        async function loadSettings() {
+            try {
+                showNotification('Loading settings...', 'info');
+                const settings = await api.getSettings();
+                
+                // Populate form fields
+                document.getElementById('ntfyUrl').value = settings.ntfy_url || 'https://ntfy.sh';
+                document.getElementById('ntfyTopic').value = settings.ntfy_topic || '';
+                document.getElementById('whisperModel').value = settings.whisper_model || 'base';
+                document.getElementById('whisperLanguage').value = settings.whisper_language || 'auto';
+                document.getElementById('whisperDevice').value = settings.whisper_device || 'cpu';
+                document.getElementById('icsToken').textContent = settings.ics_token || 'No token available';
+                
+                showNotification('Settings loaded successfully', 'success');
+            } catch (error) {
+                showNotification('Failed to load settings: ' + error.message, 'error');
+            }
+        }
+
+        async function saveSettings() {
+            try {
+                const saveBtn = document.querySelector('[onclick="saveSettings()"]');
+                saveBtn.classList.add('loading');
+                
+                const settings = {
+                    ntfy_url: document.getElementById('ntfyUrl').value,
+                    ntfy_topic: document.getElementById('ntfyTopic').value,
+                    whisper_model: document.getElementById('whisperModel').value,
+                    whisper_language: document.getElementById('whisperLanguage').value,
+                    whisper_device: document.getElementById('whisperDevice').value
+                };
+                
+                const result = await api.updateSettings(settings);
+                
+                if (result.success) {
+                    const message = result.localStorage ? 
+                        'Settings saved locally (server unavailable)' : 
+                        'Settings saved successfully';
+                    showNotification(message, result.localStorage ? 'warning' : 'success');
+                } else {
+                    showNotification('Failed to save settings: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showNotification('Failed to save settings: ' + error.message, 'error');
+            } finally {
+                const saveBtn = document.querySelector('[onclick="saveSettings()"]');
+                saveBtn.classList.remove('loading');
+            }
+        }
+
+        async function testNotification() {
+            try {
+                const testBtn = document.querySelector('[onclick="testNotification()"]');
+                testBtn.classList.add('loading');
+                
+                const ntfyUrl = document.getElementById('ntfyUrl').value;
+                const ntfyTopic = document.getElementById('ntfyTopic').value;
+                
+                if (!ntfyTopic) {
+                    showNotification('Please enter a ntfy topic before testing', 'error');
+                    return;
+                }
+                
+                const result = await api.testNotification(ntfyUrl, ntfyTopic);
+                
+                if (result.success) {
+                    showNotification('Test notification sent! Check your ntfy app.', 'success');
+                } else {
+                    showNotification('Failed to send notification: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showNotification('Failed to send test notification: ' + error.message, 'error');
+            } finally {
+                const testBtn = document.querySelector('[onclick="testNotification()"]');
+                testBtn.classList.remove('loading');
+            }
+        }
+
+        async function generateNewToken() {
+            try {
+                const genBtn = document.querySelector('[onclick="generateNewToken()"]');
+                genBtn.classList.add('loading');
+                
+                const result = await api.generateICSToken('User generated token');
+                
+                if (result.success) {
+                    document.getElementById('icsToken').textContent = result.token;
+                    showNotification('New ICS token generated successfully', 'success');
+                } else {
+                    showNotification('Failed to generate token: ' + result.error, 'error');
+                }
+            } catch (error) {
+                showNotification('Failed to generate token: ' + error.message, 'error');
+            } finally {
+                const genBtn = document.querySelector('[onclick="generateNewToken()"]');
+                genBtn.classList.remove('loading');
+            }
+        }
+
+        async function copyToken() {
+            try {
+                const token = document.getElementById('icsToken').textContent;
+                await navigator.clipboard.writeText(token);
+                showNotification('Token copied to clipboard!', 'success');
+            } catch (error) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = document.getElementById('icsToken').textContent;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showNotification('Token copied to clipboard!', 'success');
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notifications');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            container.appendChild(notification);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
