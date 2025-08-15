@@ -100,3 +100,10 @@ InitTestScene*.unity*
 
 # Unity AI Toolkit generated assets (auto-generated content)
 GeneratedAssets/
+
+# Task Management System
+tasks.json
+server/venv/
+server/__pycache__/
+*.pyc
+*.pyo

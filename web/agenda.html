@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Agenda</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .view-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .tab-button {
+            padding: 12px 24px;
+            border: none;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .tab-button.active {
+            background: #007AFF;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0,122,255,0.3);
+        }
+
+        .tab-button:hover:not(.active) {
+            background: #f0f0f0;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            gap: 16px;
+        }
+
+        .date-navigation {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-button:hover {
+            background: #f5f5f5;
+            border-color: #999;
+        }
+
+        .current-date {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .add-task-form {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #007AFF;
+            box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: #007AFF;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0056CC;
+        }
+
+        .tasks-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .time-group {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .time-group:last-child {
+            border-bottom: none;
+        }
+
+        .time-header {
+            background: #f8f9fa;
+            padding: 12px 20px;
+            font-weight: 600;
+            color: #666;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .task-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s ease;
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-item:hover {
+            background: #f8f9fa;
+        }
+
+        .task-item.completed {
+            opacity: 0.6;
+        }
+
+        .task-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .task-info {
+            flex: 1;
+        }
+
+        .task-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: #1a1a1a;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .priority-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .priority-low { background: #e3f2fd; color: #1976d2; }
+        .priority-medium { background: #fff3e0; color: #f57c00; }
+        .priority-high { background: #ffebee; color: #d32f2f; }
+        .priority-urgent { background: #fce4ec; color: #c2185b; }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending { background: #fff3e0; color: #f57c00; }
+        .status-done { background: #e8f5e8; color: #2e7d32; }
+        .status-snoozed { background: #f3e5f5; color: #7b1fa2; }
+
+        .task-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .action-btn.done {
+            background: #e8f5e8;
+            border-color: #4caf50;
+            color: #2e7d32;
+        }
+
+        .action-btn.done:hover {
+            background: #c8e6c9;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            border: 1px solid #ffcdd2;
+        }
+
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            border: 1px solid #c8e6c9;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 12px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .task-content {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .task-actions {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Task Agenda</h1>
+            <p>Focused scheduling beyond the Hub's quick plan</p>
+        </div>
+
+        <div class="view-tabs">
+            <button class="tab-button active" data-view="day">Day</button>
+            <button class="tab-button" data-view="week">Week</button>
+        </div>
+
+        <div class="controls">
+            <div class="date-navigation">
+                <button class="nav-button" id="prev-period">‹ Previous</button>
+                <div class="current-date" id="current-date">Today</div>
+                <button class="nav-button" id="next-period">Next ›</button>
+            </div>
+            <button class="nav-button" id="today-button">Today</button>
+        </div>
+
+        <div class="add-task-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="task-title">Task Title</label>
+                    <input type="text" id="task-title" placeholder="What needs to be done?">
+                </div>
+                <div class="form-group">
+                    <label for="task-due">Due Date/Time</label>
+                    <input type="text" id="task-due" placeholder="Mon 9a, in 45m, tomorrow evening...">
+                </div>
+                <div class="form-group">
+                    <label for="task-priority">Priority</label>
+                    <select id="task-priority">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" id="add-task-btn">Add Task</button>
+            </div>
+        </div>
+
+        <div id="message-area"></div>
+
+        <div class="tasks-container">
+            <div id="tasks-content">
+                <div class="loading">Loading tasks...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/api.js"></script>
+    <script>
+        // Global state
+        let currentView = 'day';
+        let currentDate = new Date();
+        let tasks = [];
+
+        // DOM elements
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const currentDateEl = document.getElementById('current-date');
+        const prevButton = document.getElementById('prev-period');
+        const nextButton = document.getElementById('next-period');
+        const todayButton = document.getElementById('today-button');
+        const tasksContent = document.getElementById('tasks-content');
+        const messageArea = document.getElementById('message-area');
+        const addTaskBtn = document.getElementById('add-task-btn');
+        const taskTitleInput = document.getElementById('task-title');
+        const taskDueInput = document.getElementById('task-due');
+        const taskPrioritySelect = document.getElementById('task-priority');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            updateCurrentDateDisplay();
+            loadTasks();
+        });
+
+        function setupEventListeners() {
+            // Tab switching
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const view = button.dataset.view;
+                    switchView(view);
+                });
+            });
+
+            // Date navigation
+            prevButton.addEventListener('click', () => navigateDate(-1));
+            nextButton.addEventListener('click', () => navigateDate(1));
+            todayButton.addEventListener('click', goToToday);
+
+            // Add task
+            addTaskBtn.addEventListener('click', addTask);
+            taskTitleInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addTask();
+            });
+        }
+
+        function switchView(view) {
+            currentView = view;
+            
+            // Update tab appearance
+            tabButtons.forEach(button => {
+                button.classList.toggle('active', button.dataset.view === view);
+            });
+
+            updateCurrentDateDisplay();
+            loadTasks();
+        }
+
+        function navigateDate(direction) {
+            if (currentView === 'day') {
+                currentDate.setDate(currentDate.getDate() + direction);
+            } else {
+                currentDate.setDate(currentDate.getDate() + (direction * 7));
+            }
+            updateCurrentDateDisplay();
+            loadTasks();
+        }
+
+        function goToToday() {
+            currentDate = new Date();
+            updateCurrentDateDisplay();
+            loadTasks();
+        }
+
+        function updateCurrentDateDisplay() {
+            if (currentView === 'day') {
+                currentDateEl.textContent = currentDate.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            } else {
+                const weekStart = new Date(currentDate);
+                weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                
+                currentDateEl.textContent = `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+            }
+        }
+
+        async function loadTasks() {
+            try {
+                tasksContent.innerHTML = '<div class="loading">Loading tasks...</div>';
+                
+                let startDate, endDate;
+                
+                if (currentView === 'day') {
+                    startDate = new Date(currentDate);
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(currentDate);
+                    endDate.setHours(23, 59, 59, 999);
+                } else {
+                    startDate = new Date(currentDate);
+                    startDate.setDate(currentDate.getDate() - currentDate.getDay());
+                    startDate.setHours(0, 0, 0, 0);
+                    endDate = new Date(startDate);
+                    endDate.setDate(startDate.getDate() + 6);
+                    endDate.setHours(23, 59, 59, 999);
+                }
+
+                tasks = await TaskAPI.getTasks({
+                    start_date: startDate.toISOString(),
+                    end_date: endDate.toISOString()
+                });
+
+                renderTasks();
+            } catch (error) {
+                showMessage('Error loading tasks: ' + error.message, 'error');
+                tasksContent.innerHTML = '<div class="empty-state"><h3>Error loading tasks</h3><p>Please try again later.</p></div>';
+            }
+        }
+
+        function renderTasks() {
+            if (tasks.length === 0) {
+                tasksContent.innerHTML = '<div class="empty-state"><h3>No tasks scheduled</h3><p>Add a task to get started!</p></div>';
+                return;
+            }
+
+            if (currentView === 'day') {
+                renderDayView();
+            } else {
+                renderWeekView();
+            }
+        }
+
+        function renderDayView() {
+            const tasksByHour = groupTasksByHour(tasks);
+            let html = '';
+
+            // Generate hour slots
+            for (let hour = 0; hour < 24; hour++) {
+                const hourTasks = tasksByHour[hour] || [];
+                const timeLabel = formatHour(hour);
+                
+                if (hourTasks.length > 0) {
+                    html += `
+                        <div class="time-group">
+                            <div class="time-header">${timeLabel}</div>
+                            ${hourTasks.map(task => renderTaskItem(task)).join('')}
+                        </div>
+                    `;
+                }
+            }
+
+            // Add unscheduled tasks
+            const unscheduled = tasks.filter(task => !task.due_date);
+            if (unscheduled.length > 0) {
+                html += `
+                    <div class="time-group">
+                        <div class="time-header">Unscheduled</div>
+                        ${unscheduled.map(task => renderTaskItem(task)).join('')}
+                    </div>
+                `;
+            }
+
+            tasksContent.innerHTML = html || '<div class="empty-state"><h3>No tasks for this day</h3></div>';
+        }
+
+        function renderWeekView() {
+            const tasksByDay = groupTasksByDay(tasks);
+            let html = '';
+
+            // Generate day slots
+            const weekStart = new Date(currentDate);
+            weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+
+            for (let i = 0; i < 7; i++) {
+                const day = new Date(weekStart);
+                day.setDate(weekStart.getDate() + i);
+                const dayKey = day.toISOString().split('T')[0];
+                const dayTasks = tasksByDay[dayKey] || [];
+                
+                if (dayTasks.length > 0) {
+                    html += `
+                        <div class="time-group">
+                            <div class="time-header">${day.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</div>
+                            ${dayTasks.map(task => renderTaskItem(task)).join('')}
+                        </div>
+                    `;
+                }
+            }
+
+            tasksContent.innerHTML = html || '<div class="empty-state"><h3>No tasks for this week</h3></div>';
+        }
+
+        function groupTasksByHour(tasks) {
+            const groups = {};
+            tasks.forEach(task => {
+                if (task.due_date) {
+                    const hour = new Date(task.due_date).getHours();
+                    if (!groups[hour]) groups[hour] = [];
+                    groups[hour].push(task);
+                }
+            });
+            return groups;
+        }
+
+        function groupTasksByDay(tasks) {
+            const groups = {};
+            tasks.forEach(task => {
+                if (task.due_date) {
+                    const day = task.due_date.split('T')[0];
+                    if (!groups[day]) groups[day] = [];
+                    groups[day].push(task);
+                }
+            });
+            return groups;
+        }
+
+        function formatHour(hour) {
+            if (hour === 0) return '12:00 AM';
+            if (hour < 12) return `${hour}:00 AM`;
+            if (hour === 12) return '12:00 PM';
+            return `${hour - 12}:00 PM`;
+        }
+
+        function renderTaskItem(task) {
+            const dueTime = task.due_date ? new Date(task.due_date).toLocaleTimeString('en-US', { 
+                hour: 'numeric', 
+                minute: '2-digit'
+            }) : '';
+
+            return `
+                <div class="task-item ${task.status === 'done' ? 'completed' : ''}" data-task-id="${task.id}">
+                    <div class="task-content">
+                        <div class="task-info">
+                            <div class="task-title">${escapeHtml(task.title)}</div>
+                            <div class="task-meta">
+                                <span class="priority-badge priority-${task.priority}">${task.priority}</span>
+                                <span class="status-badge status-${task.status}">${task.status}</span>
+                                ${dueTime ? `<span>⏰ ${dueTime}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            ${task.status !== 'done' ? `
+                                <button class="action-btn done" onclick="markTaskDone(${task.id})">Done</button>
+                                <button class="action-btn" onclick="rescheduleTask(${task.id}, '+1h')">+1h</button>
+                                <button class="action-btn" onclick="rescheduleTask(${task.id}, '+1d')">+1d</button>
+                                <button class="action-btn" onclick="rescheduleTask(${task.id}, 'next_week')">Next week</button>
+                                <button class="action-btn" onclick="pickNewDate(${task.id})">Pick date</button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function addTask() {
+            const title = taskTitleInput.value.trim();
+            const dueStr = taskDueInput.value.trim();
+            const priority = taskPrioritySelect.value;
+
+            if (!title) {
+                showMessage('Please enter a task title', 'error');
+                return;
+            }
+
+            try {
+                let dueDate = null;
+                
+                if (dueStr) {
+                    const parseResult = await TaskAPI.parseDate(dueStr);
+                    dueDate = parseResult.parsed;
+                }
+
+                const task = await TaskAPI.createTask({
+                    title,
+                    due_date: dueDate,
+                    priority
+                });
+
+                // Clear form
+                taskTitleInput.value = '';
+                taskDueInput.value = '';
+                taskPrioritySelect.value = 'medium';
+
+                showMessage('Task added successfully!', 'success');
+                loadTasks();
+            } catch (error) {
+                showMessage('Error adding task: ' + error.message, 'error');
+            }
+        }
+
+        async function markTaskDone(taskId) {
+            try {
+                await TaskAPI.markTaskDone(taskId);
+                showMessage('Task marked as done!', 'success');
+                loadTasks();
+            } catch (error) {
+                showMessage('Error updating task: ' + error.message, 'error');
+            }
+        }
+
+        async function rescheduleTask(taskId, action) {
+            try {
+                await TaskAPI.rescheduleTask(taskId, { action });
+                showMessage(`Task rescheduled (${action})!`, 'success');
+                loadTasks();
+            } catch (error) {
+                showMessage('Error rescheduling task: ' + error.message, 'error');
+            }
+        }
+
+        async function pickNewDate(taskId) {
+            const dateStr = prompt('Enter new date/time (e.g., "Mon 9a", "tomorrow 2pm", "in 3h"):');
+            if (!dateStr) return;
+
+            try {
+                const parseResult = await TaskAPI.parseDate(dateStr);
+                await TaskAPI.rescheduleTask(taskId, { 
+                    action: 'pick_date', 
+                    new_date: parseResult.parsed 
+                });
+                showMessage('Task rescheduled!', 'success');
+                loadTasks();
+            } catch (error) {
+                showMessage('Error parsing date: ' + error.message, 'error');
+            }
+        }
+
+        function showMessage(message, type) {
+            messageArea.innerHTML = `<div class="${type}">${escapeHtml(message)}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
